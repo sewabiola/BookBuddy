@@ -13,10 +13,10 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CollectionsScreen(onEditProfile: () -> Unit) {
-    val collections = listOf(
-        BookCollection("Favorites", listOf(Book("Of Mice and Men", "John Steinbeck"))),
-        BookCollection("To Read", listOf(Book("The Housemaid", "Freida McFadden")))
-    )
+    // This is now handled by EnhancedCollectionDisplay in MainActivity
+    // Keeping this for backward compatibility
+    val collections = BookBuddyDatabase.getUserCollections()
+    val books = BookBuddyDatabase.getUserBooks()
 
     Scaffold(
         topBar = {

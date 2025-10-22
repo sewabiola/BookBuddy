@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.*
@@ -16,12 +17,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import kotlinx.coroutines.launch
 
 @Composable
-fun ProfileScreen(onBack: () -> Unit) {
-    var name by remember { mutableStateOf("") }
-    var bio by remember { mutableStateOf("") }
+fun ProfileScreen(
+    onBack: () -> Unit,
+    onLogout: () -> Unit = {}
+) {
+    val currentUser = BookBuddyDatabase.getCurrentUser()
+    var name by remember { mutableStateOf(currentUser?.displayName ?: "") }
+    var bio by remember { mutableStateOf(currentUser?.bio ?: "") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var isSaving by remember { mutableStateOf(false) }
+    var showSuccessMessage by remember { mutableStateOf(false) }
 
     val pickImageLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -42,6 +50,14 @@ fun ProfileScreen(onBack: () -> Unit) {
                 text = "Edit Profile",
                 style = MaterialTheme.typography.titleLarge
             )
+            
+            if (currentUser != null) {
+                Text(
+                    text = "Welcome, ${currentUser.displayName}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
             Spacer(Modifier.height(20.dp))
 
@@ -100,13 +116,119 @@ fun ProfileScreen(onBack: () -> Unit) {
                 value = bio,
                 onValueChange = { bio = it },
                 label = { Text("Bio") },
+                placeholder = { Text("Tell us about yourself...") },
+                minLines = 3,
+                maxLines = 5,
                 modifier = Modifier.fillMaxWidth()
             )
 
+            Spacer(Modifier.height(16.dp))
+
+            // Additional user info (read-only for now)
+            if (currentUser != null) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Account Information",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Email: ${currentUser.email}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            text = "Username: ${currentUser.username}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        if (currentUser.location.isNotEmpty()) {
+                            Text(
+                                text = "Location: ${currentUser.location}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+            }
+
             Spacer(Modifier.height(20.dp))
 
-            Button(onClick = onBack) {
-                Text("Save & Back")
+            // Success Message
+            if (showSuccessMessage) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Profile saved successfully!",
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Button(
+                    onClick = {
+                        if (currentUser != null) {
+                            isSaving = true
+                            val updatedProfile = currentUser.copy(
+                                displayName = name,
+                                bio = bio
+                            )
+                            val success = BookBuddyDatabase.updateUserProfile(updatedProfile)
+                            isSaving = false
+                            if (success) {
+                                showSuccessMessage = true
+                                // Navigate back after a short delay to show success message
+                                onBack()
+                            }
+                        } else {
+                            onBack()
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = !isSaving
+                ) {
+                    if (isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Text("Save & Back")
+                    }
+                }
+                
+                OutlinedButton(
+                    onClick = onLogout,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Logout")
+                }
             }
         }
     }

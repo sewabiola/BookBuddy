@@ -53,7 +53,8 @@ fun EnhancedCollectionDisplay(
     onBookClick: (BookWithCategory) -> Unit = {},
     onCollectionClick: (BookCollection) -> Unit = {},
     onAddBookClick: () -> Unit = {},
-    onProfileClick: () -> Unit = {}
+    onProfileClick: () -> Unit = {},
+    onBookDelete: (BookWithCategory) -> Unit = {}
 ) {
     var viewMode by remember { mutableStateOf(ViewMode.LIST) }
     var sortOption by remember { mutableStateOf(SortOption.TITLE) }
@@ -213,15 +214,18 @@ fun EnhancedCollectionDisplay(
             when (viewMode) {
                 ViewMode.GRID -> BooksGridView(
                     books = sortedBooks,
-                    onBookClick = onBookClick
+                    onBookClick = onBookClick,
+                    onBookDelete = onBookDelete
                 )
                 ViewMode.LIST -> BooksListView(
                     books = sortedBooks,
-                    onBookClick = onBookClick
+                    onBookClick = onBookClick,
+                    onBookDelete = onBookDelete
                 )
                 ViewMode.COMPACT -> BooksCompactView(
                     books = sortedBooks,
-                    onBookClick = onBookClick
+                    onBookClick = onBookClick,
+                    onBookDelete = onBookDelete
                 )
             }
         }
@@ -392,7 +396,8 @@ fun CollectionCard(
 @Composable
 fun BooksGridView(
     books: List<BookWithCategory>,
-    onBookClick: (BookWithCategory) -> Unit
+    onBookClick: (BookWithCategory) -> Unit,
+    onBookDelete: (BookWithCategory) -> Unit = {}
 ) {
     androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
         columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(2),
@@ -403,7 +408,7 @@ fun BooksGridView(
     ) {
         items(books.size) { index ->
             val book = books[index]
-            BookGridCard(book = book, onClick = { onBookClick(book) })
+            BookGridCard(book = book, onClick = { onBookClick(book) }, onDelete = { onBookDelete(book) })
         }
     }
 }
@@ -411,7 +416,8 @@ fun BooksGridView(
 @Composable
 fun BookGridCard(
     book: BookWithCategory,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDelete: () -> Unit = {}
 ) {
     Card(
         onClick = onClick,
@@ -444,20 +450,39 @@ fun BookGridCard(
             }
 
             Column(modifier = Modifier.padding(12.dp)) {
-                Text(
-                    text = book.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = book.author,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = book.title,
+                            style = MaterialTheme.typography.titleSmall,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = book.author,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "Delete Book",
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
                 if (book.rating > 0) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -482,7 +507,8 @@ fun BookGridCard(
 @Composable
 fun BooksListView(
     books: List<BookWithCategory>,
-    onBookClick: (BookWithCategory) -> Unit
+    onBookClick: (BookWithCategory) -> Unit,
+    onBookDelete: (BookWithCategory) -> Unit = {}
 ) {
     androidx.compose.foundation.lazy.LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -491,7 +517,7 @@ fun BooksListView(
     ) {
         items(books.size) { index ->
             val book = books[index]
-            BookListItem(book = book, onClick = { onBookClick(book) })
+            BookListItem(book = book, onClick = { onBookClick(book) }, onDelete = { onBookDelete(book) })
         }
     }
 }
@@ -499,7 +525,8 @@ fun BooksListView(
 @Composable
 fun BookListItem(
     book: BookWithCategory,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDelete: () -> Unit = {}
 ) {
     Card(
         onClick = onClick,
@@ -577,11 +604,24 @@ fun BookListItem(
                 }
             }
 
-            Icon(
-                Icons.Default.ArrowForward,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Delete Book",
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+                Icon(
+                    Icons.Default.ArrowForward,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
@@ -589,7 +629,8 @@ fun BookListItem(
 @Composable
 fun BooksCompactView(
     books: List<BookWithCategory>,
-    onBookClick: (BookWithCategory) -> Unit
+    onBookClick: (BookWithCategory) -> Unit,
+    onBookDelete: (BookWithCategory) -> Unit = {}
 ) {
     androidx.compose.foundation.lazy.LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -604,15 +645,28 @@ fun BooksCompactView(
                     Icon(Icons.Default.Star, contentDescription = null)
                 },
                 trailingContent = {
-                    if (book.rating > 0) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            onClick = { onBookDelete(book) },
+                            modifier = Modifier.size(24.dp)
+                        ) {
                             Icon(
-                                Icons.Default.Star,
-                                contentDescription = null,
+                                Icons.Default.Delete,
+                                contentDescription = "Delete Book",
                                 modifier = Modifier.size(16.dp),
-                                tint = Color(0xFFFFB300)
+                                tint = MaterialTheme.colorScheme.error
                             )
-                            Text(String.format("%.1f", book.rating))
+                        }
+                        if (book.rating > 0) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Default.Star,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color(0xFFFFB300)
+                                )
+                                Text(String.format("%.1f", book.rating))
+                            }
                         }
                     }
                 },
