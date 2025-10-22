@@ -16,9 +16,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import androidx.navigation.NavController
+
+
+// Added navController and authViewModel parameters to enable logout navigation
+// and user session management from this screen.
 
 @Composable
-fun ProfileScreen(onBack: () -> Unit) {
+fun ProfileScreen(
+    onBack: () -> Unit,
+    navController: NavController,
+    authViewModel: AuthViewModel
+)
+ {
     var name by remember { mutableStateOf("") }
     var bio by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
@@ -107,6 +117,26 @@ fun ProfileScreen(onBack: () -> Unit) {
 
             Button(onClick = onBack) {
                 Text("Save & Back")
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            // Added logout button- Task 1-2-1-3: Implemented logout functionality
+            Button(
+                onClick = {
+                    authViewModel.logout()
+                    navController.navigate("login") {
+                        popUpTo("collections") { inclusive = true }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                )
+            ) {
+                Text("Logout", color = MaterialTheme.colorScheme.onErrorContainer)
             }
         }
     }

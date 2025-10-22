@@ -187,12 +187,18 @@ fun RegistrationScreen(
                     val errors = validateRegistrationData(registrationData)
                     if (errors.isEmpty()) {
                         isLoading = true
-                        // TODO: Implement actual registration logic
-                        // For now, just simulate success after validation
-                        onRegisterSuccess()
+                        val repository = UserRepository()
+                        val success = repository.register(registrationData)
+                        isLoading = false
+                        if (success) {
+                            onRegisterSuccess()
+                        } else {
+                            validationErrors = mapOf("email" to "An account with this email already exists")
+                        }
                     } else {
                         validationErrors = errors
                     }
+
                 },
                 modifier = Modifier
                     .fillMaxWidth()
