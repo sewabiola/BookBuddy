@@ -5,9 +5,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.runtime.getValue
 
 
 class MainActivity : ComponentActivity() {
@@ -18,6 +23,7 @@ class MainActivity : ComponentActivity() {
                 Surface {
                     val navController = rememberNavController()
                     val authViewModel = AuthViewModel() // Adds the AuthViewModel to manage login/logout/reset
+                   // val bookRepository = BookRepository() // Adds the BookRepository instance
 
                     NavHost(
                         navController = navController,
@@ -48,19 +54,35 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        // collection screen (after login)
+                        // book collection display screen
                         composable("collections") {
-                            CollectionsScreen(
-                                onEditProfile = { navController.navigate("profile") }
+                            val repository = remember { BookRepository() }
+
+                            var books by remember { mutableStateOf<List<BookWithCategory>>(emptyList()) }
+
+                            LaunchedEffect(Unit) {
+                                books = repository.searchBookOnline("popular novels")
+                            }
+
+                            EnhancedCollectionDisplay(
+                                collections = emptyList(),
+                                booksWithCategory = books,
+                                onBookClick = { /* TODO: Navigate to Book Details */ },
+                                onCollectionClick = { /* TODO: Future feature */ },
+                                onAddBookClick = { navController.navigate("addBook") },
+                                onProfileClick = { /* TODO: Navigate to profile screen */ }
                             )
                         }
 
-                        // profile screen
-                        composable("profile") {
-                            ProfileScreen(
-                                onBack = { navController.popBackStack() },
-                                navController = navController,
-                                authViewModel = authViewModel
+                        // book addition screen
+                        composable("addBook") {
+                            BookAdditionScreen(
+                                onBookAdded = { newBook ->
+
+                                    // For now, simply go back to collections since the books come from Google API
+                                    navController.popBackStack()
+                                },
+                                onNavigateBack = { navController.popBackStack() }
                             )
                         }
                     }

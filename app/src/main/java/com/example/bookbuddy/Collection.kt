@@ -8,10 +8,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
@@ -19,14 +21,26 @@ import androidx.compose.ui.unit.dp
 @Composable
 
 fun CollectionsScreen(onEditProfile: () -> Unit) {
-// Replaced hardcoded list with BookRepository data source
-    // Collections are now retrieved from BookRepository
-    val repository = BookRepository()
-    val allBooks = repository.getAllBooks()
-    val categories = repository.getCategories()
-    val collections = categories.filter { it != "All" }.map { category ->
-        BookCollection(category, repository.filterByCategory(category))
+
+    val repository = remember { BookRepository() }
+    var collections by remember { mutableStateOf<List<BookCollection>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var categories by remember { mutableStateOf<List<String>>(emptyList()) }
+
+// Load book data from Google Books API when screen opens
+    LaunchedEffect(Unit) {
+        categories = repository.getCategories().filter { it != "All" }
+        val tempCollections = mutableListOf<BookCollection>()
+
+        for (category in categories) {
+            val books = repository.searchBookOnline(category)
+            tempCollections.add(BookCollection(category, books))
+        }
+
+        collections = tempCollections
+        isLoading = false
     }
+
 
     // Task 2-2-3-1: Added state for search bar
     var searchQuery by remember { mutableStateOf("") }
@@ -108,7 +122,16 @@ fun CollectionsScreen(onEditProfile: () -> Unit) {
             Spacer(Modifier.height(16.dp))
 
             // Task 2-2-3: Updated list and empty state
-            if (filteredCollections.isEmpty()) {
+            if (isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else
+
+                if (filteredCollections.isEmpty()) {
                 Text(
                     text = when {
                         searchQuery.isNotBlank() ->

@@ -1,26 +1,64 @@
 package com.example.bookbuddy
 
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.compose.foundation.lazy.items
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import java.util.*
+import kotlinx.coroutines.launch
 
 // Task 51: 2-1-1-1 Create book addition interface
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,18 +67,24 @@ fun BookAdditionScreen(
     onBookAdded: (BookWithCategory) -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    var book by remember { mutableStateOf(BookWithCategory(id = UUID.randomUUID().toString(), title = "", author = "")) }
-    var selectedCategories by remember { mutableStateOf<List<String>>(emptyList()) }
+    val repository = remember { BookRepository() }
+    val coroutineScope = rememberCoroutineScope()
+    var book by remember { mutableStateOf(BookWithCategory(id = "", title = "", author = "", categories = emptyList(), coverImageUrl = "", isbn = "", description = "", publishedYear = 0, rating = 0f, pageCount = 0, language = "English"))}
     var coverImageUri by remember { mutableStateOf<String?>(null) }
-    var showCategoryDialog by remember { mutableStateOf(false) }
-    var isSearching by remember { mutableStateOf(false) }
+    var selectedCategories by remember { mutableStateOf<List<String>>(emptyList()) }
     var validationError by remember { mutableStateOf<String?>(null) }
+    var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
+    var apiResults by remember { mutableStateOf<List<BookWithCategory>>(emptyList()) }
+    var isSearching by remember { mutableStateOf(false) }
+    var showCategoryDialog by remember { mutableStateOf(false) }
+
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let { coverImageUri = it.toString() }
     }
+
 
     Scaffold(
         topBar = {
@@ -89,33 +133,65 @@ fun BookAdditionScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Search Bar (Expandable)
+            // Search Bar (Google Books API)
             AnimatedVisibility(visible = isSearching) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                Column {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = {
+                            searchQuery = it
+                            if (searchQuery.text.length > 2) {
+                                coroutineScope.launch {
+                                    // Fetch from Google Books API using repository
+                                    apiResults = repository.searchBookOnline(searchQuery.text)
+                                }
+                            }
+                        },
+                        label = { Text("Search by Title or ISBN") },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+                        modifier = Modifier.fillMaxWidth()
                     )
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        OutlinedTextField(
-                            value = "",
-                            onValueChange = { /* TODO: Implement book search API */ },
-                            label = { Text("Search by ISBN or Title") },
-                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                            placeholder = { Text("Enter ISBN or book title") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (apiResults.isNotEmpty()) {
+                        Text("Search Results:", style = MaterialTheme.typography.titleMedium)
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Search online databases to auto-fill book information",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+                        LazyColumn {
+                            items(apiResults) { apiBook ->
+                                Card(
+                                    onClick = {
+                                        //Prefill fields with selected API book data
+                                        book = book.copy(
+                                            title = apiBook.title,
+                                            author = apiBook.author,
+                                            description = apiBook.description,
+                                            language = apiBook.language.ifBlank { book.language }
+                                        )
+                                        if (apiBook.coverImageUrl.isNotEmpty()) {
+                                            coverImageUri = apiBook.coverImageUrl
+                                        }
+                                        if (apiBook.categories.isNotEmpty()) {
+                                            selectedCategories = apiBook.categories
+                                        }
+                                        isSearching = false
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
+                                ) {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Text(apiBook.title, style = MaterialTheme.typography.titleMedium)
+                                        Text(apiBook.author, style = MaterialTheme.typography.bodyMedium)
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
             }
+            Spacer(modifier = Modifier.height(16.dp))
+
 
             // Book Cover Image
             Card(

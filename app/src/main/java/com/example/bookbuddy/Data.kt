@@ -1,8 +1,7 @@
 package com.example.bookbuddy
 
 // Book data models
-data class Book(val title: String, val author: String)
-data class BookCollection(val title: String, val books: List<Book>)
+data class BookCollection(val title: String, val books: List<BookWithCategory>)
 
 // Profile data model - Task 43: 1-1-1-1 Implement profile data model
 data class UserProfile(
