@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">BookBuddy</string>
+
+    <string-array name="reading_status">
+        <item>Not Started</item>
+        <item>Reading</item>
+        <item>Completed</item>
+    </string-array>
+</resources>
