@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">BookBuddy</string>
+    <string name="by_author">by %s</string>
+
+    <string-array name="reading_status">
+        <item>Want to Read</item>
+        <item>Currently Reading</item>
+        <item>Finished</item>
+        <item>On Hold</item>
+        <item>Dropped</item>
+    </string-array>
 </resources>

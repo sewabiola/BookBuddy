@@ -258,3 +258,4 @@ fun DetailRow(
         )
     }
 }
+

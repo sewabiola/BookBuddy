@@ -29,7 +29,7 @@ fun BookAdditionScreen(
     onBookAdded: (BookWithCategory) -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    var book by remember { mutableStateOf(BookWithCategory(id = UUID.randomUUID().toString(), title = "", author = "")) }
+    var book by remember { mutableStateOf(BookWithCategory(id = UUID.randomUUID().toString(), title = "", author = "", categories = emptyList())) }
     var selectedCategories by remember { mutableStateOf<List<String>>(emptyList()) }
     var coverImageUri by remember { mutableStateOf<String?>(null) }
     var showCategoryDialog by remember { mutableStateOf(false) }

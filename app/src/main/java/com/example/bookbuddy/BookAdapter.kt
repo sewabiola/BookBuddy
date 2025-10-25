@@ -3,7 +3,10 @@ package com.example.bookbuddy
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.AdapterView
+import android.widget.Button
+import android.widget.Spinner
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 class BookAdapter(
@@ -27,7 +30,7 @@ class BookAdapter(
     override fun onBindViewHolder(holder: BookViewHolder, position: Int) {
         val book = bookList[position]
         holder.titleText.text = book.title
-        holder.authorText.text = "by ${book.author}"
+        holder.authorText.text = holder.itemView.context.getString(R.string.by_author, book.author)
 
         val statusArray = holder.itemView.context.resources.getStringArray(R.array.reading_status)
         val index = statusArray.indexOf(book.status).takeIf { it >= 0 } ?: 0
