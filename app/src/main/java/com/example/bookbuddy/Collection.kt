@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-
 fun CollectionsScreen(onEditProfile: () -> Unit) {
 
     val repository = remember { BookRepository() }
@@ -27,7 +26,7 @@ fun CollectionsScreen(onEditProfile: () -> Unit) {
     var isLoading by remember { mutableStateOf(true) }
     var categories by remember { mutableStateOf<List<String>>(emptyList()) }
 
-// Load book data from Google Books API when screen opens
+    // Load book data from Google Books API when screen opens
     LaunchedEffect(Unit) {
         categories = repository.getCategories().filter { it != "All" }
         val tempCollections = mutableListOf<BookCollection>()
@@ -40,7 +39,6 @@ fun CollectionsScreen(onEditProfile: () -> Unit) {
         collections = tempCollections
         isLoading = false
     }
-
 
     // Task 2-2-3-1: Added state for search bar
     var searchQuery by remember { mutableStateOf("") }
@@ -58,7 +56,6 @@ fun CollectionsScreen(onEditProfile: () -> Unit) {
                         })
     }
 
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -71,13 +68,11 @@ fun CollectionsScreen(onEditProfile: () -> Unit) {
             )
         }
     ) { paddingValues ->
-        // Changed the code to place the search bar, filter menu, and book list vertically
         Column(
             modifier = Modifier
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-
             // Task 2-2-3-1: Added Search Bar
             OutlinedTextField(
                 value = searchQuery,
@@ -87,7 +82,6 @@ fun CollectionsScreen(onEditProfile: () -> Unit) {
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
-
 
             Spacer(Modifier.height(16.dp))
 
@@ -121,7 +115,6 @@ fun CollectionsScreen(onEditProfile: () -> Unit) {
 
             Spacer(Modifier.height(16.dp))
 
-            // Task 2-2-3: Updated list and empty state
             if (isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -129,17 +122,11 @@ fun CollectionsScreen(onEditProfile: () -> Unit) {
                 ) {
                     CircularProgressIndicator()
                 }
-            } else
-
-                if (filteredCollections.isEmpty()) {
+            } else if (filteredCollections.isEmpty()) {
                 Text(
                     text = when {
-                        searchQuery.isNotBlank() ->
-                            "No books found matching '$searchQuery'"
-
-                        selectedCategory != "All" ->
-                            "No books found in '$selectedCategory' category"
-
+                        searchQuery.isNotBlank() -> "No books found matching '$searchQuery'"
+                        selectedCategory != "All" -> "No books found in '$selectedCategory' category"
                         else -> "No books found"
                     },
                     style = MaterialTheme.typography.bodyMedium
