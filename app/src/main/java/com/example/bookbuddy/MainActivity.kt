@@ -10,20 +10,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // Initialize sample data
+
         BookBuddyDatabase.initializeSampleData()
-        
+
         setContent {
             MaterialTheme {
                 Surface {
                     val navController = rememberNavController()
                     var isLoggedIn by remember { mutableStateOf(BookBuddyDatabase.getCurrentUser() != null) }
-                    
-                    // Check login status and navigate accordingly
+
                     LaunchedEffect(isLoggedIn) {
                         if (!isLoggedIn) {
                             navController.navigate("login") {
@@ -31,12 +30,15 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
-                    
-                    NavHost(navController = navController, startDestination = if (isLoggedIn) "collections" else "login") {
+
+                    NavHost(
+                        navController = navController,
+                        startDestination = if (isLoggedIn) "collections" else "login"
+                    ) {
                         // Authentication Screens
                         composable("login") {
                             LoginScreen(
-                                onLoginSuccess = { 
+                                onLoginSuccess = {
                                     isLoggedIn = true
                                     navController.navigate("collections") {
                                         popUpTo(0) { inclusive = true }
@@ -45,10 +47,10 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToRegister = { navController.navigate("register") }
                             )
                         }
-                        
+
                         composable("register") {
                             RegistrationScreen(
-                                onRegisterSuccess = { 
+                                onRegisterSuccess = {
                                     isLoggedIn = true
                                     navController.navigate("profile_setup") {
                                         popUpTo(0) { inclusive = true }
@@ -57,8 +59,7 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToLogin = { navController.popBackStack() }
                             )
                         }
-                        
-                        // Profile Setup Wizard
+
                         composable("profile_setup") {
                             ProfileSetupWizard(
                                 onComplete = { userProfile ->
@@ -67,94 +68,103 @@ class MainActivity : ComponentActivity() {
                                         popUpTo(0) { inclusive = true }
                                     }
                                 },
-                                onSkip = { navController.navigate("collections") {
-                                    popUpTo(0) { inclusive = true }
-                                }}
+                                onSkip = {
+                                    navController.navigate("collections") {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                }
                             )
                         }
-                        
-                        // Main App Screens
+
+
+
                         composable("collections") {
-                            EnhancedCollectionDisplay(
+                            CollectionsScreenWithSeeMore(
+                                navController = navController,
                                 collections = BookBuddyDatabase.getUserCollections(),
                                 booksWithCategory = BookBuddyDatabase.getUserBooks(),
-                                onBookClick = { book -> 
-                                    // Navigate to book details
-                                    navController.navigate("book_details/${book.id}")
-                                },
-                                onCollectionClick = { collection ->
-                                    // Navigate to collection details
-                                    navController.navigate("collection_details/${collection.title}")
-                                },
+                                onBookClick = { book -> navController.navigate("book_details/${book.id}") },
+                                onCollectionClick = { collection -> navController.navigate("collection_details/${collection.title}") },
                                 onAddBookClick = { navController.navigate("add_book") },
                                 onProfileClick = { navController.navigate("profile") },
-                                onBookDelete = { book ->
-                                    BookBuddyDatabase.deleteBook(book.id)
-                                }
+                                onBookDelete = { book -> BookBuddyDatabase.deleteBook(book.id) },
+                                onSeeMoreCollections = { navController.navigate("all_collections") }
                             )
                         }
-                        
+
+                        composable("all_collections") {
+                            AllCollectionsScreen(onBack = { navController.popBackStack() })
+                        }
+
+
+
                         composable("add_book") {
-                            BookAdditionScreen(
-                                onBookAdded = { book ->
-                                    BookBuddyDatabase.addBook(book)
-                                    navController.popBackStack()
-                                },
-                                onNavigateBack = { navController.popBackStack() }
-                            )
-                        }
-                        
-                        composable("profile") {
-                            ProfileScreen(
-                                onBack = { navController.popBackStack() },
-                                onLogout = {
-                                    BookBuddyDatabase.logout()
-                                    isLoggedIn = false
+                                    BookAdditionScreen(
+                                        onBookAdded = { book ->
+                                            BookBuddyDatabase.addBook(book)
+                                            navController.popBackStack()
+                                        },
+                                        onNavigateBack = { navController.popBackStack() }
+                                    )
                                 }
-                            )
-                        }
-                        
-                        composable("categories") {
-                            CategoryBrowserScreen(
-                                onCategorySelected = { category ->
-                                    navController.navigate("category_details/${category.id}")
-                                },
-                                onNavigateBack = { navController.popBackStack() }
-                            )
-                        }
-                        
-                        composable("category_details/{categoryId}") { backStackEntry ->
-                            val categoryId = backStackEntry.arguments?.getString("categoryId") ?: ""
-                            val category = BookCategorization.getCategoryById(categoryId)
-                            if (category != null) {
-                                CategoryDetailScreen(
-                                    category = category,
-                                    books = BookBuddyDatabase.getBooksByCategory(category.name),
-                                    onNavigateBack = { navController.popBackStack() },
-                                    onBookClick = { book ->
-                                        navController.navigate("book_details/${book.id}")
+
+                                composable("profile") {
+                                    ProfileScreen(
+                                        onBack = { navController.popBackStack() },
+                                        onLogout = {
+                                            BookBuddyDatabase.logout()
+                                            isLoggedIn = false
+                                        }
+                                    )
+                                }
+
+                                composable("categories") {
+                                    CategoryBrowserScreen(
+                                        onCategorySelected = { category ->
+                                            navController.navigate("category_details/${category.id}")
+                                        },
+                                        onNavigateBack = { navController.popBackStack() }
+                                    )
+                                }
+
+                                composable("category_details/{categoryId}") { backStackEntry ->
+                                    val categoryId =
+                                        backStackEntry.arguments?.getString("categoryId") ?: ""
+                                    val category = BookCategorization.getCategoryById(categoryId)
+                                    if (category != null) {
+                                        CategoryDetailScreen(
+                                            category = category,
+                                            books = BookBuddyDatabase.getBooksByCategory(category.name),
+                                            onNavigateBack = { navController.popBackStack() },
+                                            onBookClick = { book ->
+                                                navController.navigate("book_details/${book.id}")
+                                            }
+                                        )
                                     }
-                                )
-                            }
-                        }
-                        
-                        composable("book_details/{bookId}") { backStackEntry ->
-                            val bookId = backStackEntry.arguments?.getString("bookId") ?: ""
-                            val book = BookBuddyDatabase.getAllBooks().find { it.id == bookId }
-                            if (book != null) {
-                                BookDetailScreen(
-                                    book = book,
-                                    onNavigateBack = { navController.popBackStack() },
-                                    onDeleteBook = {
-                                        BookBuddyDatabase.deleteBook(book.id)
-                                        navController.popBackStack()
+                                }
+
+                                composable("book_details/{bookId}") { backStackEntry ->
+                                    val bookId = backStackEntry.arguments?.getString("bookId") ?: ""
+                                    val book =
+                                        BookBuddyDatabase.getAllBooks().find { it.id == bookId }
+                                    if (book != null) {
+                                        BookDetailScreen(
+                                            book = book,
+                                            onNavigateBack = { navController.popBackStack() },
+                                            onDeleteBook = {
+                                                BookBuddyDatabase.deleteBook(book.id)
+                                                navController.popBackStack()
+                                            }
+                                        )
                                     }
-                                )
+                                }
                             }
                         }
                     }
                 }
             }
         }
-    }
-}
+
+
+
+

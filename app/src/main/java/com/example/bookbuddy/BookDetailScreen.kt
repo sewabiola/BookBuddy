@@ -22,6 +22,7 @@ fun BookDetailScreen(
     onDeleteBook: () -> Unit
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var readingStatus by remember { mutableStateOf("Not Started") }
 
     Scaffold(
         topBar = {
@@ -134,6 +135,24 @@ fun BookDetailScreen(
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                 }
+
+                //Reading Status Control
+                Text("Reading Status", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf("Not Started", "Reading", "Finished").forEach { status ->
+                        FilterChip(
+                            selected = readingStatus == status,
+                            onClick = { readingStatus = status },
+                            label = { Text(status) }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
 
                 // Categories
                 if (book.categories.isNotEmpty()) {
