@@ -98,6 +98,7 @@ object BookCategorization {
         )
     )
 
+
     fun getAllCategories(): List<BookCategory> = mainCategories
 
     fun getCategoryById(id: String): BookCategory? {

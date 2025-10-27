@@ -1,7 +1,5 @@
 package com.example.bookbuddy
 
-import java.util.*
-
 // Simple in-memory database for BookBuddy
 object BookBuddyDatabase {
     private val users = mutableMapOf<String, UserProfile>()
@@ -75,7 +73,6 @@ object BookBuddyDatabase {
     
     fun getAllBooks(): List<BookWithCategory> = books.values.toList()
     
-    // Collection Management
     fun createCollection(collection: BookCollection): Boolean {
         return if (currentUser != null) {
             collections[collection.title] = collection
@@ -84,7 +81,28 @@ object BookBuddyDatabase {
             false
         }
     }
-    
+    fun updateCollection(oldTitle: String, updatedCollection: BookCollection): Boolean {
+        if (!collections.containsKey(oldTitle)) return false
+
+        if (oldTitle != updatedCollection.title) {
+            collections.remove(oldTitle)
+        }
+
+        collections[updatedCollection.title] = updatedCollection
+        return true
+    }
+
+
+    fun deleteCollection(collection: BookCollection): Boolean {
+        return if (collections.containsKey(collection.title)) {
+            collections.remove(collection.title)
+            true
+        } else {
+            false
+        }
+    }
+
+
     fun getUserCollections(): List<BookCollection> {
         return if (currentUser != null) {
             collections.values.toList()
@@ -162,7 +180,7 @@ object BookBuddyDatabase {
                 publishedYear = 1937,
                 rating = 4.5f,
                 pageCount = 107
-            ),
+        ),
             BookWithCategory(
                 id = "book2",
                 title = "The Housemaid",

@@ -76,8 +76,6 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-
-
                         composable("collections") {
                             CollectionsScreenWithSeeMore(
                                 navController = navController,
@@ -85,15 +83,17 @@ class MainActivity : ComponentActivity() {
                                 booksWithCategory = BookBuddyDatabase.getUserBooks(),
                                 onBookClick = { book -> navController.navigate("book_details/${book.id}") },
                                 onCollectionClick = { collection -> navController.navigate("collection_details/${collection.title}") },
-                                onAddBookClick = { navController.navigate("add_book") },
-                                onProfileClick = { navController.navigate("profile") },
                                 onBookDelete = { book -> BookBuddyDatabase.deleteBook(book.id) },
                                 onSeeMoreCollections = { navController.navigate("all_collections") }
                             )
                         }
 
+
                         composable("all_collections") {
-                            AllCollectionsScreen(onBack = { navController.popBackStack() })
+                            AllCollectionsScreen(
+                                navController = navController,
+                                onBack = { navController.popBackStack() } // This will go back to the previous screen
+                            )
                         }
 
 
