@@ -1,7 +1,6 @@
 package com.example.bookbuddy
 
 // Book data models
-data class Book(val title: String, val author: String)
 
 // Profile data model - Task 43: 1-1-1-1 Implement profile data model
 data class UserProfile(
@@ -72,20 +71,19 @@ data class BookCategory(
 
 // Enhanced Book model with categorization
 data class BookWithCategory(
-    val id: String,
-    val title: String,
-    val author: String,
+    val id: String = "",
+    val title: String = "",
+    val author: String = "",
     val categories: List<String> = emptyList(),
-    val coverImageUrl: String = "",
-    val isbn: String = "",
     val description: String = "",
     val publishedYear: Int = 0,
     val rating: Float = 0f,
     val pageCount: Int = 0,
-    val language: String = "English",
-    var readingStatus: String = "Not Started"
-
+    val coverImageUrl: String = "",
+    val language: String = "",
+    val isbn: String = ""
 )
+
 
 data class BookCategoryStatics(
     val book: BookWithCategory,
@@ -101,3 +99,4 @@ data class BookCollection(
     val title: String,
     val books: List<Book>
 )
+

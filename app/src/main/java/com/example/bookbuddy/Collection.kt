@@ -63,7 +63,7 @@ fun CollectionsScreenWithSeeMore(
                 booksWithCategory = booksWithCategory,
                 onBookClick = onBookClick,
                 onCollectionClick = onCollectionClick,
-                onAddBookClick = { /* do nothing */ },
+                onAddBookClick = { navController.navigate("add_book") },
                 onProfileClick = { navController.navigate("profile") },
                 onBookDelete = onBookDelete
             )

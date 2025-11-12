@@ -6,7 +6,7 @@ object BookBuddyDatabase {
     private val books = mutableMapOf<String, BookWithCategory>()
     private val collections = mutableMapOf<String, BookCollection>()
     private var currentUser: UserProfile? = null
-    
+
     // User Management
     fun registerUser(userProfile: UserProfile): Boolean {
         return if (users.containsKey(userProfile.email)) {
@@ -17,15 +17,15 @@ object BookBuddyDatabase {
             true
         }
     }
-    
+
     fun loginUser(email: String): UserProfile? {
         val user = users[email]
         currentUser = user
         return user
     }
-    
+
     fun getCurrentUser(): UserProfile? = currentUser
-    
+
     fun updateUserProfile(updatedProfile: UserProfile): Boolean {
         return if (currentUser != null) {
             users[currentUser!!.email] = updatedProfile
@@ -35,21 +35,21 @@ object BookBuddyDatabase {
             false
         }
     }
-    
+
     fun logout() {
         currentUser = null
     }
-    
+
     // Book Management
     fun addBook(book: BookWithCategory): Boolean {
-        return if (currentUser != null) {
+        return if (getCurrentUser() != null) {
             books[book.id] = book
             true
         } else {
             false
         }
     }
-    
+
     fun deleteBook(bookId: String): Boolean {
         return if (currentUser != null && books.containsKey(bookId)) {
             books.remove(bookId)
@@ -58,7 +58,7 @@ object BookBuddyDatabase {
             false
         }
     }
-    
+
     fun getUserBooks(): List<BookWithCategory> {
         return if (currentUser != null) {
             books.values.filter { book ->
@@ -70,9 +70,9 @@ object BookBuddyDatabase {
             emptyList()
         }
     }
-    
+
     fun getAllBooks(): List<BookWithCategory> = books.values.toList()
-    
+
     fun createCollection(collection: BookCollection): Boolean {
         return if (currentUser != null) {
             collections[collection.title] = collection
@@ -81,6 +81,7 @@ object BookBuddyDatabase {
             false
         }
     }
+
     fun updateCollection(oldTitle: String, updatedCollection: BookCollection): Boolean {
         if (!collections.containsKey(oldTitle)) return false
 
@@ -110,7 +111,7 @@ object BookBuddyDatabase {
             emptyList()
         }
     }
-    
+
     fun addBookToCollection(collectionTitle: String, book: BookWithCategory): Boolean {
         return if (currentUser != null && collections.containsKey(collectionTitle)) {
             val collection = collections[collectionTitle]!!
@@ -121,7 +122,7 @@ object BookBuddyDatabase {
             false
         }
     }
-    
+
     fun removeBookFromCollection(collectionTitle: String, bookTitle: String): Boolean {
         return if (currentUser != null && collections.containsKey(collectionTitle)) {
             val collection = collections[collectionTitle]!!
@@ -132,24 +133,48 @@ object BookBuddyDatabase {
             false
         }
     }
-    
+
     // Search and Filter
     fun searchBooks(query: String): List<BookWithCategory> {
         val lowerQuery = query.lowercase()
         return books.values.filter { book ->
             book.title.lowercase().contains(lowerQuery) ||
-            book.author.lowercase().contains(lowerQuery) ||
-            book.categories.any { it.lowercase().contains(lowerQuery) }
+                    book.author.lowercase().contains(lowerQuery) ||
+                    book.categories.any { it.lowercase().contains(lowerQuery) }
         }
     }
-    
+
     fun getBooksByCategory(category: String): List<BookWithCategory> {
         return books.values.filter { book ->
             book.categories.any { it.equals(category, ignoreCase = true) }
         }
     }
-    
-    // Initialize with sample data
+
+    // --- Reviews Storage ---
+    private val reviews = mutableListOf<BookReview>()
+
+    fun addReview(review: BookReview) {
+        // Prevent duplicate reviews (same bookId + same comment + same rating + same user)
+        val exists = reviews.any {
+            it.bookId == review.bookId &&
+                    it.comment == review.comment &&
+                    it.rating == review.rating &&
+                    it.username == review.username
+        }
+        if (!exists) {
+            reviews.add(review)
+        }
+    }
+
+    fun getReviewsForBook(bookId: String): List<BookReview> {
+        return reviews.filter { it.bookId == bookId }
+    }
+
+    // --- Get book by ID safely ---
+    fun getBookById(bookId: String): BookWithCategory? {
+        return getAllBooks().find { it.id == bookId }
+    }
+
     fun initializeSampleData() {
         // Add sample user
         val sampleUser = UserProfile(
@@ -168,7 +193,7 @@ object BookBuddyDatabase {
         )
         users["user@example.com"] = sampleUser
         currentUser = sampleUser
-        
+
         // Add sample books
         val sampleBooks = listOf(
             BookWithCategory(
@@ -180,7 +205,7 @@ object BookBuddyDatabase {
                 publishedYear = 1937,
                 rating = 4.5f,
                 pageCount = 107
-        ),
+            ),
             BookWithCategory(
                 id = "book2",
                 title = "The Housemaid",
@@ -202,20 +227,49 @@ object BookBuddyDatabase {
                 pageCount = 281
             )
         )
-        
         sampleBooks.forEach { book ->
             books[book.id] = book
         }
-        
+
         // Add sample collections
         val sampleCollections = listOf(
             BookCollection("Favorites", listOf(Book("Of Mice and Men", "John Steinbeck"))),
             BookCollection("To Read", listOf(Book("The Housemaid", "Freida McFadden"))),
             BookCollection("Classics", listOf(Book("To Kill a Mockingbird", "Harper Lee")))
         )
-        
         sampleCollections.forEach { collection ->
             collections[collection.title] = collection
         }
+
+        // ✅ Add sample reviews
+        reviews.clear()
+        reviews.addAll(
+            listOf(
+                BookReview(
+                    id = "rev1",
+                    bookId = "book1",
+                    reviewerName = "Anna Reader",
+                    rating = 5.0f,
+                    comment = "A timeless story about friendship and hardship.",
+                    date = "2024-09-12"
+                ),
+                BookReview(
+                    id = "rev2",
+                    bookId = "book1",
+                    reviewerName = "Tom Literature",
+                    rating = 4.0f,
+                    comment = "Beautifully written, though quite sad.",
+                    date = "2024-10-05"
+                ),
+                BookReview(
+                    id = "rev3",
+                    bookId = "book2",
+                    reviewerName = "Sarah MysteryFan",
+                    rating = 4.5f,
+                    comment = "Twisty and intense — couldn’t put it down!",
+                    date = "2025-02-01"
+                )
+            )
+        )
     }
 }
