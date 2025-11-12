@@ -215,7 +215,6 @@ fun BookDetailScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // --- Review Section ---
                 val allReviews = remember { mutableStateListOf<BookReview>() }
                 var selectedSortOption by remember { mutableStateOf("Newest") }
 

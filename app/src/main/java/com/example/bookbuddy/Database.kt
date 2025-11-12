@@ -150,11 +150,9 @@ object BookBuddyDatabase {
         }
     }
 
-    // --- Reviews Storage ---
     private val reviews = mutableListOf<BookReview>()
 
     fun addReview(review: BookReview) {
-        // Prevent duplicate reviews (same bookId + same comment + same rating + same user)
         val exists = reviews.any {
             it.bookId == review.bookId &&
                     it.comment == review.comment &&
@@ -170,7 +168,6 @@ object BookBuddyDatabase {
         return reviews.filter { it.bookId == bookId }
     }
 
-    // --- Get book by ID safely ---
     fun getBookById(bookId: String): BookWithCategory? {
         return getAllBooks().find { it.id == bookId }
     }
@@ -241,7 +238,7 @@ object BookBuddyDatabase {
             collections[collection.title] = collection
         }
 
-        // ✅ Add sample reviews
+        // Add sample reviews
         reviews.clear()
         reviews.addAll(
             listOf(

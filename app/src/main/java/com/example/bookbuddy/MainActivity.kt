@@ -92,7 +92,7 @@ class MainActivity : ComponentActivity() {
                         composable("all_collections") {
                             AllCollectionsScreen(
                                 navController = navController,
-                                onBack = { navController.popBackStack() } // This will go back to the previous screen
+                                onBack = { navController.popBackStack() }
                             )
                         }
 
@@ -156,7 +156,6 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-
                         composable("book_details/{bookId}") { backStackEntry ->
                             val bookId = backStackEntry.arguments?.getString("bookId") ?: ""
                             val book = BookBuddyDatabase.getAllBooks().find { it.id == bookId }
@@ -169,7 +168,7 @@ class MainActivity : ComponentActivity() {
                                         BookBuddyDatabase.deleteBook(book.id)
                                         navController.popBackStack()
                                     },
-                                    navController = navController // ✅ Added this line
+                                    navController = navController
                                 )
                             }
                         }
