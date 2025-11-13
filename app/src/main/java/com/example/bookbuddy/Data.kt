@@ -81,7 +81,8 @@ data class BookWithCategory(
     val pageCount: Int = 0,
     val coverImageUrl: String = "",
     val language: String = "",
-    val isbn: String = ""
+    val isbn: String = "",
+    val readingStatus: String = "Not Started"
 )
 
 

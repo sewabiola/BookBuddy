@@ -6,6 +6,7 @@ data class Book(
     val author: String = "",
     val description: String = "",
     val category: String = "",
-    val coverImageUrl: String = ""
+    val coverImageUrl: String = "",
+        val readingStatus: String = "Not Started"
 )
 

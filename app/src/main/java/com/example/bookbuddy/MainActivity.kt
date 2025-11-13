@@ -76,6 +76,10 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
+                        composable("stats") {
+                            ReadingStatsScreen(navController = navController)
+                        }
+
                         composable("collections") {
                             CollectionsScreenWithSeeMore(
                                 navController = navController,
@@ -172,6 +176,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
+
                     }
                 }
             }

@@ -73,6 +73,7 @@ dependencies {
 
     // Coil for image loading
     implementation(libs.coil.compose)
+    implementation(libs.play.services.games)
 
     // Testing
     testImplementation(libs.junit)

@@ -24,7 +24,9 @@ fun BookDetailScreen(
     navController: NavHostController
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var readingStatus by remember { mutableStateOf("Not Started") }
+    var readingStatus by remember {
+        mutableStateOf(BookBuddyDatabase.getReadingStatus(book.id))
+    }
 
     // Load reviews for this book
     val reviews by remember { mutableStateOf(BookBuddyDatabase.getReviewsForBook(book.id)) }
@@ -124,34 +126,21 @@ fun BookDetailScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                if (book.rating > 0) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Star,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = String.format("%.1f", book.rating),
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                // Reading Status
+                // --- Reading Status Section ---
                 Text("Reading Status", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(8.dp))
+
+                val statuses = listOf("Not Started", "Reading", "Read")
+
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("Not Started", "Reading", "Finished").forEach { status ->
+                    statuses.forEach { status ->
                         FilterChip(
                             selected = readingStatus == status,
-                            onClick = { readingStatus = status },
+                            onClick = {
+                                readingStatus = status
+                                // Save automatically to database
+                                BookBuddyDatabase.setReadingStatus(book.id, status)
+                            },
                             label = { Text(status) }
                         )
                     }
@@ -160,226 +149,227 @@ fun BookDetailScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Categories
-                if (book.categories.isNotEmpty()) {
-                    Text("Categories", style = MaterialTheme.typography.titleMedium)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        book.categories.forEach { category ->
-                            FilterChip(
-                                selected = false,
-                                onClick = { },
-                                label = { Text(category) }
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                // Book Details
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Book Details", style = MaterialTheme.typography.titleMedium)
+                    if (book.categories.isNotEmpty()) {
+                        Text("Categories", style = MaterialTheme.typography.titleMedium)
                         Spacer(modifier = Modifier.height(8.dp))
-                        if (book.publishedYear > 0) DetailRow(
-                            "Published",
-                            book.publishedYear.toString()
-                        )
-                        if (book.pageCount > 0) DetailRow("Pages", book.pageCount.toString())
-                        if (book.language.isNotEmpty()) DetailRow("Language", book.language)
-                        if (book.isbn.isNotEmpty()) DetailRow("ISBN", book.isbn)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            book.categories.forEach { category ->
+                                FilterChip(
+                                    selected = false,
+                                    onClick = { },
+                                    label = { Text(category) }
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Description
-                if (book.description.isNotEmpty()) {
+                    // Book Details
                     Card(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Description", style = MaterialTheme.typography.titleMedium)
+                            Text("Book Details", style = MaterialTheme.typography.titleMedium)
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text(book.description, style = MaterialTheme.typography.bodyMedium)
+                            if (book.publishedYear > 0) DetailRow(
+                                "Published",
+                                book.publishedYear.toString()
+                            )
+                            if (book.pageCount > 0) DetailRow("Pages", book.pageCount.toString())
+                            if (book.language.isNotEmpty()) DetailRow("Language", book.language)
+                            if (book.isbn.isNotEmpty()) DetailRow("ISBN", book.isbn)
                         }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // --- Reviews Section ---
-                Text(
-                    text = "Reviews",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                val allReviews = remember { mutableStateListOf<BookReview>() }
-                var selectedSortOption by remember { mutableStateOf("Newest") }
-
-                LaunchedEffect(book.id) {
-                    val fetchedReviews = BookBuddyDatabase.getReviewsForBook(book.id)
-                    allReviews.clear()
-                    allReviews.addAll(fetchedReviews)
-                }
-
-                if (allReviews.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(16.dp))
+
+                    // Description
+                    if (book.description.isNotEmpty()) {
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text("Description", style = MaterialTheme.typography.titleMedium)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(book.description, style = MaterialTheme.typography.bodyMedium)
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // --- Reviews Section ---
                     Text(
                         text = "Reviews",
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Sorting Dropdown
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Sort by:")
-                        DropdownMenuBox(
-                            selectedSortOption,
-                            onOptionSelected = { selectedSortOption = it }
+                    val allReviews = remember { mutableStateListOf<BookReview>() }
+                    var selectedSortOption by remember { mutableStateOf("Newest") }
+
+                    LaunchedEffect(book.id) {
+                        val fetchedReviews = BookBuddyDatabase.getReviewsForBook(book.id)
+                        allReviews.clear()
+                        allReviews.addAll(fetchedReviews)
+                    }
+
+                    if (allReviews.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Reviews",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Sorting Dropdown
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Sort by:")
+                            DropdownMenuBox(
+                                selectedSortOption,
+                                onOptionSelected = { selectedSortOption = it }
+                            )
+                        }
+
+                        // Apply sorting logic
+                        val sortedReviews = when (selectedSortOption) {
+                            "Highest Rating" -> allReviews.sortedByDescending { it.rating }
+                            "Lowest Rating" -> allReviews.sortedBy { it.rating }
+                            "Oldest" -> allReviews // Assuming order added = oldest
+                            else -> allReviews.reversed() // "Newest" default
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        sortedReviews.forEach { review ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            Icons.Default.Star,
+                                            contentDescription = "Rating",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text("${review.rating}/5")
+                                    }
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(review.comment)
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        "- ${review.username}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Delete Confirmation Dialog
+                    if (showDeleteDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showDeleteDialog = false },
+                            title = { Text("Delete Book") },
+                            text = { Text("Are you sure you want to delete \"${book.title}\"? This action cannot be undone.") },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    onDeleteBook()
+                                    showDeleteDialog = false
+                                }) {
+                                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showDeleteDialog = false }) {
+                                    Text("Cancel")
+                                }
+                            }
                         )
                     }
-
-                    // Apply sorting logic
-                    val sortedReviews = when (selectedSortOption) {
-                        "Highest Rating" -> allReviews.sortedByDescending { it.rating }
-                        "Lowest Rating" -> allReviews.sortedBy { it.rating }
-                        "Oldest" -> allReviews // Assuming order added = oldest
-                        else -> allReviews.reversed() // "Newest" default
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    sortedReviews.forEach { review ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        Icons.Default.Star,
-                                        contentDescription = "Rating",
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("${review.rating}/5")
-                                }
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(review.comment)
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    "- ${review.username}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
                 }
 
-                // Delete Confirmation Dialog
-                if (showDeleteDialog) {
-                    AlertDialog(
-                        onDismissRequest = { showDeleteDialog = false },
-                        title = { Text("Delete Book") },
-                        text = { Text("Are you sure you want to delete \"${book.title}\"? This action cannot be undone.") },
-                        confirmButton = {
-                            TextButton(onClick = {
-                                onDeleteBook()
-                                showDeleteDialog = false
-                            }) {
-                                Text("Delete", color = MaterialTheme.colorScheme.error)
-                            }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = { showDeleteDialog = false }) {
-                                Text("Cancel")
-                            }
-                        }
-                    )
-                }
-            }
-
-            @Composable
-            fun DetailRow(label: String, value: String) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = value,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                @Composable
+                fun DetailRow(label: String, value: String) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = value,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             }
         }
     }
-}
-@Composable
-fun DropdownMenuBox(
-    selectedOption: String,
-    onOptionSelected: (String) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    val options = listOf("Newest", "Oldest", "Highest Rating", "Lowest Rating")
-
-    Box {
-        Button(onClick = { expanded = true }) {
-            Text(selectedOption)
-            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-        }
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(option) },
-                    onClick = {
-                        onOptionSelected(option)
-                        expanded = false
-                    }
-                )
-            }
-        }
-    }
-}
-@Composable
-fun DetailRow(
-    label: String,
-    value: String
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+    @Composable
+    fun DropdownMenuBox(
+        selectedOption: String,
+        onOptionSelected: (String) -> Unit
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium
-        )
+        var expanded by remember { mutableStateOf(false) }
+        val options = listOf("Newest", "Oldest", "Highest Rating", "Lowest Rating")
+
+        Box {
+            Button(onClick = { expanded = true }) {
+                Text(selectedOption)
+                Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+            }
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option) },
+                        onClick = {
+                            onOptionSelected(option)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
     }
-}
+
+    @Composable
+    fun DetailRow(
+        label: String,
+        value: String
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
 

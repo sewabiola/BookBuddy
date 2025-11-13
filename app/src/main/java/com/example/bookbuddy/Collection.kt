@@ -30,11 +30,15 @@ fun CollectionsScreenWithSeeMore(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Collections") },
+            CenterAlignedTopAppBar(
+                title = { Text("BookBuddy") },
                 actions = {
-                    IconButton(onClick = { navController.navigate("profile") }) {
-                        Icon(Icons.Default.Person, contentDescription = "Profile")
+                    TextButton(onClick = { navController.navigate("stats") }) {
+                        Text(
+                            text = "View Stats",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             )
