@@ -50,6 +50,8 @@ enum class SortOption {
 fun EnhancedCollectionDisplay(
     collections: List<BookCollection>,
     booksWithCategory: List<BookWithCategory> = emptyList(),
+    recommendedBooks: List<BookWithCategory> = emptyList(),
+    isLoadingBooks: Boolean = false,
     onBookClick: (BookWithCategory) -> Unit = {},
     onCollectionClick: (BookCollection) -> Unit = {},
     onAddBookClick: () -> Unit = {},
@@ -160,12 +162,38 @@ fun EnhancedCollectionDisplay(
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            if (isLoadingBooks) {
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
+
             // Stats Card
             ReadingStatsCard(
                 totalBooks = booksWithCategory.size,
                 collections = collections.size,
                 modifier = Modifier.padding(16.dp)
             )
+
+            if (recommendedBooks.isNotEmpty()) {
+                Text(
+                    text = "Collaborative Picks",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(recommendedBooks) { book ->
+                        RecommendationCard(book = book, onClick = { onBookClick(book) })
+                    }
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+            }
 
             // Collections Section
             if (collections.isNotEmpty()) {
@@ -351,6 +379,62 @@ fun StatItem(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onPrimaryContainer
         )
+    }
+}
+
+@Composable
+fun RecommendationCard(
+    book: BookWithCategory,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .width(220.dp)
+            .height(140.dp),
+        onClick = onClick
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = book.title,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = book.author,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (book.categories.isNotEmpty()) {
+                Text(
+                    text = book.categories.joinToString(", "),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Star,
+                    contentDescription = null,
+                    tint = Color(0xFFFFB300),
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = if (book.rating > 0) String.format("%.1f", book.rating) else "New",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
     }
 }
 

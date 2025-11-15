@@ -74,6 +74,10 @@ dependencies {
     // Coil for image loading
     implementation(libs.coil.compose)
 
+    // Networking & async
+    implementation(libs.okhttp)
+    implementation(libs.kotlinx.coroutines.android)
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

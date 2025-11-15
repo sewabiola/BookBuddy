@@ -85,3 +85,17 @@ data class BookWithCategory(
     val pageCount: Int = 0,
     val language: String = "English"
 )
+
+// Review & feedback model for tasks 63/64
+data class Review(
+    val id: String,
+    val bookId: String,
+    val userId: String,
+    val username: String,
+    val rating: Int,
+    val content: String,
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis()
+) {
+    val isEdited: Boolean get() = updatedAt - createdAt > 5_000
+}

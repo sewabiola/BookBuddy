@@ -9,6 +9,9 @@ A modern Android application for book lovers to manage their reading collections
 - **Reading Goals**: Set and track annual reading goals
 - **Genre Preferences**: Customize your reading experience based on favorite genres
 - **Modern UI**: Built with Jetpack Compose and Material 3 design
+- **Google Books Integration**: Live data pulled from the Google Books API replaces static fixtures
+- **Review Management**: Authenticated readers can add, edit, and delete their reviews per book
+- **Collaborative Filtering**: Personalized recommendations generated from community-wide ratings
 
 ## Prerequisites
 

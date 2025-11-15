@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
+import androidx.compose.runtime.collectAsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -22,6 +23,11 @@ class MainActivity : ComponentActivity() {
                 Surface {
                     val navController = rememberNavController()
                     var isLoggedIn by remember { mutableStateOf(BookBuddyDatabase.getCurrentUser() != null) }
+                    val books by BookBuddyDatabase.observeBooks().collectAsState()
+                    val collections by BookBuddyDatabase.observeCollections().collectAsState()
+                    val recommended by BookBuddyDatabase.observeRecommendations().collectAsState()
+                    val allReviews by BookBuddyDatabase.observeReviews().collectAsState()
+                    val isFetchingBooks by BookBuddyDatabase.observeIsFetchingBooks().collectAsState()
                     
                     // Check login status and navigate accordingly
                     LaunchedEffect(isLoggedIn) {
@@ -30,6 +36,10 @@ class MainActivity : ComponentActivity() {
                                 popUpTo(0) { inclusive = true }
                             }
                         }
+                    }
+                    
+                    LaunchedEffect(Unit) {
+                        BookBuddyDatabase.ensureRemoteBooksLoaded()
                     }
                     
                     NavHost(navController = navController, startDestination = if (isLoggedIn) "collections" else "login") {
@@ -76,8 +86,10 @@ class MainActivity : ComponentActivity() {
                         // Main App Screens
                         composable("collections") {
                             EnhancedCollectionDisplay(
-                                collections = BookBuddyDatabase.getUserCollections(),
-                                booksWithCategory = BookBuddyDatabase.getUserBooks(),
+                                collections = collections,
+                                booksWithCategory = books,
+                                recommendedBooks = recommended,
+                                isLoadingBooks = isFetchingBooks,
                                 onBookClick = { book -> 
                                     // Navigate to book details
                                     navController.navigate("book_details/${book.id}")
@@ -140,14 +152,26 @@ class MainActivity : ComponentActivity() {
                         
                         composable("book_details/{bookId}") { backStackEntry ->
                             val bookId = backStackEntry.arguments?.getString("bookId") ?: ""
-                            val book = BookBuddyDatabase.getAllBooks().find { it.id == bookId }
+                            val book = books.find { it.id == bookId }
                             if (book != null) {
                                 BookDetailScreen(
                                     book = book,
+                                    reviews = allReviews.filter { it.bookId == book.id },
+                                    currentUser = BookBuddyDatabase.getCurrentUser(),
                                     onNavigateBack = { navController.popBackStack() },
                                     onDeleteBook = {
                                         BookBuddyDatabase.deleteBook(book.id)
                                         navController.popBackStack()
+                                    },
+                                    onSubmitReview = { reviewId, rating, content ->
+                                        if (reviewId == null) {
+                                            BookBuddyDatabase.createReview(book.id, rating, content)
+                                        } else {
+                                            BookBuddyDatabase.updateReview(reviewId, rating, content)
+                                        }
+                                    },
+                                    onDeleteReview = { review ->
+                                        BookBuddyDatabase.deleteReview(review.id)
                                     }
                                 )
                             }
