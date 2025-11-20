@@ -1,4 +1,3 @@
-// File: Forum.kt
 package com.example.bookbuddy
 
 import androidx.compose.foundation.background
@@ -22,51 +21,6 @@ import androidx.navigation.NavHostController
 import java.util.*
 import androidx.compose.material.icons.filled.Warning
 
-
-
-data class ForumPost(
-    val id: String = UUID.randomUUID().toString(),
-    val authorId: String,
-    val authorName: String,
-    val title: String,
-    val body: String,
-    val createdAt: Long = System.currentTimeMillis(),
-    val comments: MutableList<Comment> = mutableListOf(),
-    var isDeleted: Boolean = false,
-    var flags: Int = 0
-)
-
-data class Comment(
-    val id: String = UUID.randomUUID().toString(),
-    val authorId: String,
-    val authorName: String,
-    val body: String,
-    val createdAt: Long = System.currentTimeMillis(),
-    val replies: MutableList<Comment> = mutableListOf(),
-    var isDeleted: Boolean = false,
-    var flags: Int = 0
-)
-
-data class ModerationAction(
-    val moderatorId: String,
-    val targetId: String,
-    val targetType: String, // "post" or "comment"
-    val action: String, // "delete", "restore", "flag", "note"
-    val note: String?,
-    val timestamp: Long = System.currentTimeMillis()
-)
-
-/* ---------------------------
-   Database extensions (add only)
-   --------------------------- */
-
-fun BookBuddyDatabase.addForumStorage() {
-    // noop placeholder so file references BookBuddyDatabase in compile-time,
-    // real storage below is in companion object extension via top-level vals/functions
-}
-
-/* We'll create a private set of storage variables and functions using file-level scope.
-   These do NOT overwrite BookBuddyDatabase; they just call it and add forum storage. */
 
 private val forumPostsStorage = linkedMapOf<String, ForumPost>() // ordered
 private val moderationLog = mutableListOf<ModerationAction>()

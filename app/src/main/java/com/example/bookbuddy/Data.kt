@@ -103,3 +103,34 @@ data class BookCollection(
     val books: List<Book>
 )
 
+data class ForumPost(
+    val id: String = UUID.randomUUID().toString(),
+    val authorId: String,
+    val authorName: String,
+    val title: String,
+    val body: String,
+    val createdAt: Long = System.currentTimeMillis(),
+    val comments: MutableList<Comment> = mutableListOf(),
+    var isDeleted: Boolean = false,
+    var flags: Int = 0
+)
+
+data class Comment(
+    val id: String = UUID.randomUUID().toString(),
+    val authorId: String,
+    val authorName: String,
+    val body: String,
+    val createdAt: Long = System.currentTimeMillis(),
+    val replies: MutableList<Comment> = mutableListOf(),
+    var isDeleted: Boolean = false,
+    var flags: Int = 0
+)
+
+data class ModerationAction(
+    val moderatorId: String,
+    val targetId: String,
+    val targetType: String, // "post" or "comment"
+    val action: String, // "delete", "restore", "flag", "note"
+    val note: String?,
+    val timestamp: Long = System.currentTimeMillis()
+)
