@@ -30,7 +30,7 @@ fun CollectionsScreenWithSeeMore(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("BookBuddy") },
+                title = { /* no title */ },
                 actions = {
                     Row {
 
@@ -51,12 +51,20 @@ fun CollectionsScreenWithSeeMore(
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
+
+                        // ─── Forum Button (NEW) ─────────────────────
+                        TextButton(onClick = { navController.navigate("forum") }) {
+                            Text(
+                                text = "Forum",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
             )
         },
 
-        // ✔ bottomBar must be INSIDE Scaffold
         bottomBar = {
             Button(
                 onClick = onSeeMoreCollections,
@@ -88,7 +96,7 @@ fun CollectionsScreenWithSeeMore(
             )
         }
     }
-}
+};
 
 // --- All Collections Screen with Add/Edit/Delete ---
 @OptIn(ExperimentalMaterial3Api::class)

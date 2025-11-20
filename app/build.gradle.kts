@@ -74,6 +74,7 @@ dependencies {
     // Coil for image loading
     implementation(libs.coil.compose)
     implementation(libs.play.services.games)
+    implementation(libs.cronet.embedded)
 
     // Testing
     testImplementation(libs.junit)

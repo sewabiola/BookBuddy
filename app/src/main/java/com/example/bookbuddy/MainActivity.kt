@@ -104,6 +104,12 @@ class MainActivity : ComponentActivity() {
                             RecommendationScreen(navController)
                         }
 
+                        composable("forum") { ForumScreen(navController) }
+                        composable("forum_thread/{postId}") { backStackEntry ->
+                            val postId = backStackEntry.arguments?.getString("postId") ?: ""
+                            ForumThreadScreen(postId = postId, navController = navController)
+                        }
+
 
                         composable("add_book") {
                             BookAdditionScreen(
