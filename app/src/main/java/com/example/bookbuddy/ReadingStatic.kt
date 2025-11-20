@@ -15,7 +15,6 @@ import androidx.navigation.NavHostController
 fun ReadingStatsScreen(navController: NavHostController) {
     var stats by remember { mutableStateOf(BookBuddyDatabase.getReadingStatistics()) }
 
-    // Recalculate stats when returning to this screen
     LaunchedEffect(Unit) {
         stats = BookBuddyDatabase.getReadingStatistics()
     }

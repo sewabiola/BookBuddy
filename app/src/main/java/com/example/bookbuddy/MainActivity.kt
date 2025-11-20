@@ -100,6 +100,9 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
+                        composable("recommend") {
+                            RecommendationScreen(navController)
+                        }
 
 
                         composable("add_book") {

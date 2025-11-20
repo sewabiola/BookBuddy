@@ -16,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 
-// --- Main Collections Screen ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CollectionsScreenWithSeeMore(
@@ -33,16 +32,31 @@ fun CollectionsScreenWithSeeMore(
             CenterAlignedTopAppBar(
                 title = { Text("BookBuddy") },
                 actions = {
-                    TextButton(onClick = { navController.navigate("stats") }) {
-                        Text(
-                            text = "View Stats",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                    Row {
+
+                        // ─── View Stats Button ─────────────────────
+                        TextButton(onClick = { navController.navigate("stats") }) {
+                            Text(
+                                text = "View Stats",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+
+                        // ─── Recommend Button ─────────────────────
+                        TextButton(onClick = { navController.navigate("recommend") }) {
+                            Text(
+                                text = "Recommend",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
             )
         },
+
+        // ✔ bottomBar must be INSIDE Scaffold
         bottomBar = {
             Button(
                 onClick = onSeeMoreCollections,
@@ -54,6 +68,7 @@ fun CollectionsScreenWithSeeMore(
             }
         }
     ) { paddingValues ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()

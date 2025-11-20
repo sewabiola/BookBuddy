@@ -6,6 +6,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -16,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -29,7 +31,15 @@ fun BookAdditionScreen(
     onBookAdded: (BookWithCategory) -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    var book by remember { mutableStateOf(BookWithCategory(id = UUID.randomUUID().toString(), title = "", author = "")) }
+    var book by remember {
+        mutableStateOf(
+            BookWithCategory(
+                id = UUID.randomUUID().toString(),
+                title = "",
+                author = ""
+            )
+        )
+    }
     var selectedCategories by remember { mutableStateOf<List<String>>(emptyList()) }
     var coverImageUri by remember { mutableStateOf<String?>(null) }
     var showCategoryDialog by remember { mutableStateOf(false) }
@@ -64,7 +74,9 @@ fun BookAdditionScreen(
                     when {
                         book.title.isBlank() -> validationError = "Please enter a book title"
                         book.author.isBlank() -> validationError = "Please enter an author name"
-                        selectedCategories.isEmpty() -> validationError = "Please select at least one category"
+                        selectedCategories.isEmpty() -> validationError =
+                            "Please select at least one category"
+
                         else -> {
                             val newBook = book.copy(
                                 categories = selectedCategories,
