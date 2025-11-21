@@ -2,7 +2,6 @@ package com.example.bookbuddy
 
 import java.util.UUID
 
-// Book data models
 
 // Profile data model - Task 43: 1-1-1-1 Implement profile data model
 data class UserProfile(
