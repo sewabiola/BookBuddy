@@ -25,7 +25,8 @@ fun BookDetailScreen(
     onNavigateBack: () -> Unit,
     onDeleteBook: () -> Unit,
     onSubmitReview: (reviewId: String?, rating: Int, content: String) -> Unit,
-    onDeleteReview: (Review) -> Unit
+    onDeleteReview: (Review) -> Unit,
+    navController: androidx.navigation.NavController? = null
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     var reviewText by remember { mutableStateOf("") }

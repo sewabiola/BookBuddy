@@ -14,10 +14,10 @@ import androidx.navigation.compose.rememberNavController
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         // Initialize sample data
         BookBuddyDatabase.initializeSampleData()
-        
+
         setContent {
             MaterialTheme {
                 Surface {
@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
                     val recommended by BookBuddyDatabase.observeRecommendations().collectAsState()
                     val allReviews by BookBuddyDatabase.observeReviews().collectAsState()
                     val isFetchingBooks by BookBuddyDatabase.observeIsFetchingBooks().collectAsState()
-                    
+
                     // Check login status and navigate accordingly
                     LaunchedEffect(isLoggedIn) {
                         if (!isLoggedIn) {
@@ -37,28 +37,39 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
-                    
+
                     LaunchedEffect(Unit) {
                         BookBuddyDatabase.ensureRemoteBooksLoaded()
                     }
-                    
-                    NavHost(navController = navController, startDestination = if (isLoggedIn) "collections" else "login") {
+
+                    NavHost(
+                        navController = navController,
+                        startDestination = if (isLoggedIn) "collections" else "login"
+                    ) {
                         // Authentication Screens
                         composable("login") {
                             LoginScreen(
-                                onLoginSuccess = { 
+                                onLoginSuccess = {
                                     isLoggedIn = true
                                     navController.navigate("collections") {
                                         popUpTo(0) { inclusive = true }
                                     }
                                 },
-                                onNavigateToRegister = { navController.navigate("register") }
+                                onNavigateToRegister = { navController.navigate("register") },
+                                onNavigateToReset = { navController.navigate("password_reset") }
                             )
                         }
-                        
+
+                        composable("password_reset") {
+                            PasswordResetScreen(
+                                onBack = { navController.popBackStack() },
+                                onResetComplete = { navController.popBackStack() }
+                            )
+                        }
+
                         composable("register") {
                             RegistrationScreen(
-                                onRegisterSuccess = { 
+                                onRegisterSuccess = {
                                     isLoggedIn = true
                                     navController.navigate("profile_setup") {
                                         popUpTo(0) { inclusive = true }
@@ -67,7 +78,7 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToLogin = { navController.popBackStack() }
                             )
                         }
-                        
+
                         // Profile Setup Wizard
                         composable("profile_setup") {
                             ProfileSetupWizard(
@@ -77,25 +88,30 @@ class MainActivity : ComponentActivity() {
                                         popUpTo(0) { inclusive = true }
                                     }
                                 },
-                                onSkip = { navController.navigate("collections") {
-                                    popUpTo(0) { inclusive = true }
-                                }}
+                                onSkip = {
+                                    navController.navigate("collections") {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                }
                             )
                         }
-                        
-                        // Main App Screens
+
+                        // Stats Screen (Loren's feature)
+                        composable("stats") {
+                            ReadingStatsScreen(navController = navController)
+                        }
+
+                        // Main App Screens - Using your EnhancedCollectionDisplay with state management
                         composable("collections") {
                             EnhancedCollectionDisplay(
                                 collections = collections,
                                 booksWithCategory = books,
                                 recommendedBooks = recommended,
                                 isLoadingBooks = isFetchingBooks,
-                                onBookClick = { book -> 
-                                    // Navigate to book details
+                                onBookClick = { book ->
                                     navController.navigate("book_details/${book.id}")
                                 },
                                 onCollectionClick = { collection ->
-                                    // Navigate to collection details
                                     navController.navigate("collection_details/${collection.title}")
                                 },
                                 onAddBookClick = { navController.navigate("add_book") },
@@ -105,17 +121,25 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-                        
+
+                        composable("all_collections") {
+                            AllCollectionsScreen(
+                                navController = navController,
+                                onBack = { navController.popBackStack() }
+                            )
+                        }
+
                         composable("add_book") {
                             BookAdditionScreen(
                                 onBookAdded = { book ->
                                     BookBuddyDatabase.addBook(book)
                                     navController.popBackStack()
+
                                 },
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
-                        
+
                         composable("profile") {
                             ProfileScreen(
                                 onBack = { navController.popBackStack() },
@@ -125,7 +149,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-                        
+
                         composable("categories") {
                             CategoryBrowserScreen(
                                 onCategorySelected = { category ->
@@ -134,7 +158,7 @@ class MainActivity : ComponentActivity() {
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
-                        
+
                         composable("category_details/{categoryId}") { backStackEntry ->
                             val categoryId = backStackEntry.arguments?.getString("categoryId") ?: ""
                             val category = BookCategorization.getCategoryById(categoryId)
@@ -149,7 +173,23 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
-                        
+
+                        // Loren's separate book review screen
+                        composable("book_review/{bookId}") { backStackEntry ->
+                            val bookId = backStackEntry.arguments?.getString("bookId") ?: ""
+                            val book = BookBuddyDatabase.getBookById(bookId)
+                            if (book != null) {
+                                BookReviewScreen(
+                                    book = book,
+                                    onReviewAdded = {
+                                        BookBuddyDatabase.addReview(it)
+                                    },
+                                    onNavigateBack = { navController.popBackStack() }
+                                )
+                            }
+                        }
+
+                        // Book details with your enhanced review functionality
                         composable("book_details/{bookId}") { backStackEntry ->
                             val bookId = backStackEntry.arguments?.getString("bookId") ?: ""
                             val book = books.find { it.id == bookId }
@@ -172,7 +212,8 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onDeleteReview = { review ->
                                         BookBuddyDatabase.deleteReview(review.id)
-                                    }
+                                    },
+                                    navController = navController
                                 )
                             }
                         }

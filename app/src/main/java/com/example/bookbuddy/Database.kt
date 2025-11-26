@@ -12,6 +12,9 @@ object BookBuddyDatabase {
     private val books = mutableMapOf<String, BookWithCategory>()
     private val collections = mutableMapOf<String, BookCollection>()
     private val userRatings = mutableMapOf<String, MutableMap<String, Float>>()
+    private val passwords = mutableMapOf<String, String>()  // Loren's password storage
+    private val resetTokens = mutableMapOf<String, String>()  // Loren's password reset tokens
+    private val reviewVotes: MutableMap<String, MutableMap<String, Int>> = mutableMapOf()  // Loren's review voting
     private var currentUser: UserProfile? = null
     private var remoteInitialized = false
 
@@ -38,6 +41,39 @@ object BookBuddyDatabase {
             currentUser = userProfile
             true
         }
+    }
+
+    // Loren's password registration
+    fun registerUser(userProfile: UserProfile, password: String): Boolean {
+        val ok = registerUser(userProfile)
+        if (ok) passwords[userProfile.email] = password
+        return ok
+    }
+
+    // Loren's login with password validation
+    fun validateLogin(email: String, password: String): UserProfile? {
+        val user = users[email]
+        if (user != null && passwords[email] == password) {
+            currentUser = user
+            return user
+        }
+        return null
+    }
+
+    // Loren's password reset functionality (demo)
+    fun requestPasswordReset(email: String): String? {
+        if (!users.containsKey(email)) return null
+        val token = (100000..999999).random().toString()
+        resetTokens[email] = token
+        return token
+    }
+
+    fun resetPassword(email: String, token: String, newPassword: String): Boolean {
+        val expected = resetTokens[email] ?: return false
+        if (expected != token) return false
+        passwords[email] = newPassword
+        resetTokens.remove(email)
+        return true
     }
 
     fun loginUser(email: String): UserProfile? {
@@ -87,6 +123,10 @@ object BookBuddyDatabase {
 
     fun getUserBooks(): List<BookWithCategory> = booksState.value
     fun getAllBooks(): List<BookWithCategory> = booksState.value
+
+    fun getBookById(bookId: String): BookWithCategory? {
+        return getAllBooks().find { it.id == bookId }
+    }
 
     fun searchBooks(query: String): List<BookWithCategory> {
         val lowerQuery = query.lowercase()
@@ -196,6 +236,30 @@ object BookBuddyDatabase {
         updateUserRating(user.userId, existing.bookId, null)
         return true
     }
+
+    // Loren's review voting functionality
+    fun voteReview(reviewId: String, userId: String, upvote: Boolean) {
+        if (userId.isBlank()) return
+        val votesByUser = reviewVotes.getOrPut(reviewId) { mutableMapOf() }
+        val newVote = if (upvote) 1 else -1
+
+        if (votesByUser[userId] == newVote) {
+            votesByUser.remove(userId)
+        } else {
+            votesByUser[userId] = newVote
+        }
+    }
+
+    fun getReviewVotes(reviewId: String): Pair<Int, Int> {
+        val votes = reviewVotes[reviewId]?.values ?: emptyList()
+        val up = votes.count { it == 1 }
+        val down = votes.count { it == -1 }
+        return up to down
+    }
+
+    fun getUserVoteForReview(reviewId: String, userId: String): Int {
+        return reviewVotes[reviewId]?.get(userId) ?: 0
+    }
     // endregion
 
     // region Collaborative Filtering
@@ -281,6 +345,7 @@ object BookBuddyDatabase {
         )
         users[sampleUser.email] = sampleUser
         currentUser = sampleUser
+        passwords[sampleUser.email] = "password123"  // Default password for demo
 
         val sampleCollections = listOf(
             BookCollection("Favorites", emptyList()),
