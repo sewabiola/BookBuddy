@@ -174,6 +174,18 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
+                        // LocYenDan's forum and recommendation routes
+                        composable("recommend") {
+                            RecommendationScreen(navController)
+                        }
+
+                        composable("forum") { ForumScreen(navController) }
+
+                        composable("forum_thread/{postId}") { backStackEntry ->
+                            val postId = backStackEntry.arguments?.getString("postId") ?: ""
+                            ForumThreadScreen(postId = postId, navController = navController)
+                        }
+
                         // Loren's separate book review screen
                         composable("book_review/{bookId}") { backStackEntry ->
                             val bookId = backStackEntry.arguments?.getString("bookId") ?: ""

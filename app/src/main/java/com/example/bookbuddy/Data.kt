@@ -1,8 +1,7 @@
 package com.example.bookbuddy
 
-// Book data models
-data class Book(val title: String, val author: String)
-data class BookCollection(val title: String, val books: List<Book>)
+import java.util.UUID
+
 
 // Profile data model - Task 43: 1-1-1-1 Implement profile data model
 data class UserProfile(
@@ -73,17 +72,66 @@ data class BookCategory(
 
 // Enhanced Book model with categorization
 data class BookWithCategory(
-    val id: String,
-    val title: String,
-    val author: String,
+    val id: String = "",
+    val title: String = "",
+    val author: String = "",
     val categories: List<String> = emptyList(),
-    val coverImageUrl: String = "",
-    val isbn: String = "",
     val description: String = "",
     val publishedYear: Int = 0,
     val rating: Float = 0f,
     val pageCount: Int = 0,
-    val language: String = "English"
+    val coverImageUrl: String = "",
+    val language: String = "",
+    val isbn: String = "",
+    val readingStatus: String = "Not Started"
+)
+
+
+data class BookCategoryStatics(
+    val book: BookWithCategory,
+    val readingStatus: ReadingStatus = ReadingStatus.NOT_STARTED
+)
+
+enum class ReadingStatus {
+    NOT_STARTED,
+    READING,
+    FINISHED
+}
+data class BookCollection(
+    val title: String,
+    val books: List<Book>
+)
+
+data class ForumPost(
+    val id: String = UUID.randomUUID().toString(),
+    val authorId: String,
+    val authorName: String,
+    val title: String,
+    val body: String,
+    val createdAt: Long = System.currentTimeMillis(),
+    val comments: MutableList<Comment> = mutableListOf(),
+    var isDeleted: Boolean = false,
+    var flags: Int = 0
+)
+
+data class Comment(
+    val id: String = UUID.randomUUID().toString(),
+    val authorId: String,
+    val authorName: String,
+    val body: String,
+    val createdAt: Long = System.currentTimeMillis(),
+    val replies: MutableList<Comment> = mutableListOf(),
+    var isDeleted: Boolean = false,
+    var flags: Int = 0
+)
+
+data class ModerationAction(
+    val moderatorId: String,
+    val targetId: String,
+    val targetType: String, // "post" or "comment"
+    val action: String, // "delete", "restore", "flag", "note"
+    val note: String?,
+    val timestamp: Long = System.currentTimeMillis()
 )
 
 // Review & feedback model for tasks 63/64
@@ -99,3 +147,11 @@ data class Review(
 ) {
     val isEdited: Boolean get() = updatedAt - createdAt > 5_000
 }
+
+// LocYenDan's Reading Statistics
+data class ReadingStatistics(
+    val totalBooks: Int,
+    val notStarted: Int,
+    val reading: Int,
+    val read: Int
+)

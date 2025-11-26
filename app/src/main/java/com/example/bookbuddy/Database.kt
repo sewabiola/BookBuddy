@@ -473,4 +473,29 @@ object BookBuddyDatabase {
         )
     )
     // endregion
+
+    // LocYenDan's Reading Progress Tracking
+    private val readingStatusMap = mutableMapOf<String, String>()
+
+    fun setReadingStatus(bookId: String, status: String) {
+        readingStatusMap[bookId] = status
+    }
+
+    fun getReadingStatus(bookId: String): String {
+        return readingStatusMap[bookId] ?: "Not Started"
+    }
+
+    fun getReadingStatistics(): ReadingStatistics {
+        val totalBooks = getAllBooks().size
+        val notStarted = getAllBooks().count { getReadingStatus(it.id) == "Not Started" }
+        val reading = getAllBooks().count { getReadingStatus(it.id) == "Reading" }
+        val read = getAllBooks().count { getReadingStatus(it.id) == "Read" }
+
+        return ReadingStatistics(
+            totalBooks = totalBooks,
+            notStarted = notStarted,
+            reading = reading,
+            read = read
+        )
+    }
 }

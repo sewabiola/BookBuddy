@@ -17,7 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import java.util.UUID
-
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.compose.ui.platform.LocalLifecycleOwner
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

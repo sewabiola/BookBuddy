@@ -1,17 +1,10 @@
 package com.example.bookbuddy
 
-import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -56,7 +49,8 @@ fun EnhancedCollectionDisplay(
     onCollectionClick: (BookCollection) -> Unit = {},
     onAddBookClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
-    onBookDelete: (BookWithCategory) -> Unit = {}
+    onBookDelete: (BookWithCategory) -> Unit = {},
+    modifier: Modifier
 ) {
     var viewMode by remember { mutableStateOf(ViewMode.LIST) }
     var sortOption by remember { mutableStateOf(SortOption.TITLE) }
