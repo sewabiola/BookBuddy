@@ -157,6 +157,28 @@ object BookBuddyDatabase {
 
     fun getUserCollections(): List<BookCollection> = collectionState.value
 
+    fun updateCollection(oldTitle: String, updatedCollection: BookCollection): Boolean {
+        if (!collections.containsKey(oldTitle)) return false
+
+        if (oldTitle != updatedCollection.title) {
+            collections.remove(oldTitle)
+        }
+
+        collections[updatedCollection.title] = updatedCollection
+        publishCollections()
+        return true
+    }
+
+    fun deleteCollection(collection: BookCollection): Boolean {
+        return if (collections.containsKey(collection.title)) {
+            collections.remove(collection.title)
+            publishCollections()
+            true
+        } else {
+            false
+        }
+    }
+
     fun addBookToCollection(collectionTitle: String, book: BookWithCategory): Boolean {
         return if (currentUser != null && collections.containsKey(collectionTitle)) {
             val collection = collections[collectionTitle]!!
@@ -259,6 +281,25 @@ object BookBuddyDatabase {
 
     fun getUserVoteForReview(reviewId: String, userId: String): Int {
         return reviewVotes[reviewId]?.get(userId) ?: 0
+    }
+
+    // LocYenDan's BookReview functions
+    private val bookReviews = mutableListOf<BookReview>()
+
+    fun addReview(review: BookReview) {
+        val exists = bookReviews.any {
+            it.bookId == review.bookId &&
+                it.comment == review.comment &&
+                it.rating == review.rating &&
+                it.username == review.username
+        }
+        if (!exists) {
+            bookReviews.add(review)
+        }
+    }
+
+    fun getReviewsForBook(bookId: String): List<BookReview> {
+        return bookReviews.filter { it.bookId == bookId }
     }
     // endregion
 

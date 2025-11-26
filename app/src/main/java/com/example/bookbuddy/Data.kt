@@ -147,11 +147,3 @@ data class Review(
 ) {
     val isEdited: Boolean get() = updatedAt - createdAt > 5_000
 }
-
-// LocYenDan's Reading Statistics
-data class ReadingStatistics(
-    val totalBooks: Int,
-    val notStarted: Int,
-    val reading: Int,
-    val read: Int
-)

@@ -118,7 +118,8 @@ class MainActivity : ComponentActivity() {
                                 onProfileClick = { navController.navigate("profile") },
                                 onBookDelete = { book ->
                                     BookBuddyDatabase.deleteBook(book.id)
-                                }
+                                },
+                                modifier = androidx.compose.ui.Modifier
                             )
                         }
 
@@ -204,26 +205,14 @@ class MainActivity : ComponentActivity() {
                         // Book details with your enhanced review functionality
                         composable("book_details/{bookId}") { backStackEntry ->
                             val bookId = backStackEntry.arguments?.getString("bookId") ?: ""
-                            val book = books.find { it.id == bookId }
+                            val book = BookBuddyDatabase.getAllBooks().find { it.id == bookId }
                             if (book != null) {
                                 BookDetailScreen(
                                     book = book,
-                                    reviews = allReviews.filter { it.bookId == book.id },
-                                    currentUser = BookBuddyDatabase.getCurrentUser(),
                                     onNavigateBack = { navController.popBackStack() },
                                     onDeleteBook = {
                                         BookBuddyDatabase.deleteBook(book.id)
                                         navController.popBackStack()
-                                    },
-                                    onSubmitReview = { reviewId, rating, content ->
-                                        if (reviewId == null) {
-                                            BookBuddyDatabase.createReview(book.id, rating, content)
-                                        } else {
-                                            BookBuddyDatabase.updateReview(reviewId, rating, content)
-                                        }
-                                    },
-                                    onDeleteReview = { review ->
-                                        BookBuddyDatabase.deleteReview(review.id)
                                     },
                                     navController = navController
                                 )

@@ -29,7 +29,7 @@ fun BookDetailScreen(
     }
 
     // Load reviews for this book
-    val reviews by remember { mutableStateOf(BookBuddyDatabase.getReviewsForBook(book.id)) }
+    val reviews = remember { BookBuddyDatabase.getReviewsForBook(book.id) }
 
     Scaffold(
         topBar = {
