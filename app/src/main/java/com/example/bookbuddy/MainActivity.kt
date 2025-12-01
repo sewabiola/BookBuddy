@@ -10,6 +10,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -119,6 +121,9 @@ class MainActivity : ComponentActivity() {
                                 onBookDelete = { book ->
                                     BookBuddyDatabase.deleteBook(book.id)
                                 },
+                                onBrowseCategories = { navController.navigate("browse_categories") },
+                                onViewReadingStatus = { navController.navigate("reading_status") },
+                                onViewRecommendations = { navController.navigate("recommendations") },
                                 modifier = androidx.compose.ui.Modifier
                             )
                         }
@@ -131,11 +136,15 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("add_book") {
+                            val scope = rememberCoroutineScope()
                             BookAdditionScreen(
                                 onBookAdded = { book ->
                                     BookBuddyDatabase.addBook(book)
-                                    navController.popBackStack()
-
+                                    // Delay navigation to allow snackbar to be visible
+                                    scope.launch {
+                                        kotlinx.coroutines.delay(1000)
+                                        navController.popBackStack()
+                                    }
                                 },
                                 onNavigateBack = { navController.popBackStack() }
                             )
@@ -177,7 +186,12 @@ class MainActivity : ComponentActivity() {
 
                         // LocYenDan's forum and recommendation routes
                         composable("recommend") {
-                            RecommendationScreen(navController)
+                            RecommendationScreen(
+                                navController = navController,
+                                onBookClick = { book ->
+                                    navController.navigate("book_details/${book.id}")
+                                }
+                            )
                         }
 
                         composable("forum") { ForumScreen(navController) }
@@ -217,6 +231,36 @@ class MainActivity : ComponentActivity() {
                                     navController = navController
                                 )
                             }
+                        }
+
+                        // Category browsing screen
+                        composable("browse_categories") {
+                            CategoryBrowsingScreen(
+                                navController = navController,
+                                books = books,
+                                onBookClick = { book ->
+                                    navController.navigate("book_details/${book.id}")
+                                }
+                            )
+                        }
+
+                        // Collection details screen
+                        composable("collection_details/{collectionTitle}") { backStackEntry ->
+                            val collectionTitle = backStackEntry.arguments?.getString("collectionTitle") ?: ""
+                            CollectionDetailsScreen(
+                                navController = navController,
+                                collectionTitle = collectionTitle
+                            )
+                        }
+
+                        // Recommendations screen
+                        composable("recommendations") {
+                            RecommendationsScreen(navController = navController)
+                        }
+
+                        // Reading status screen
+                        composable("reading_status") {
+                            ReadingStatusScreen(navController = navController)
                         }
                     }
                 }

@@ -20,6 +20,7 @@ import java.util.UUID
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,6 +32,8 @@ fun BookReviewScreen(
     var rating by remember { mutableStateOf(0f) }
     var reviewText by remember { mutableStateOf("") }
     var validationError by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -43,6 +46,7 @@ fun BookReviewScreen(
                 }
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
@@ -50,17 +54,53 @@ fun BookReviewScreen(
                         rating <= 0f -> validationError = "Please provide a rating"
                         reviewText.isBlank() -> validationError = "Please enter your review"
                         else -> {
-                            val newReview = BookReview(
-                                id = UUID.randomUUID().toString(),
-                                bookId = book.id,
-                                reviewerName = BookBuddyDatabase.getCurrentUser()?.displayName ?: "Anonymous",
-                                rating = rating,
-                                comment = reviewText,
-                                date = Date().toString()
-                            )
-                            BookBuddyDatabase.addReview(newReview)
-                            onReviewAdded(newReview)
-                            onNavigateBack()
+                            val currentUser = BookBuddyDatabase.getCurrentUser()
+                            if (currentUser == null) {
+                                validationError = "You must be logged in to submit a review."
+                            } else {
+                                // Use the Review system (not BookReview) so it shows up in BookDetailScreen
+                                val createdReview = BookBuddyDatabase.createReview(
+                                    bookId = book.id,
+                                    rating = rating.toInt(),
+                                    content = reviewText
+                                )
+                                if (createdReview != null) {
+                                    // Also add to BookReview system for backward compatibility
+                                    val bookReview = BookReview(
+                                        id = createdReview.id,
+                                        bookId = book.id,
+                                        reviewerName = createdReview.username,
+                                        username = createdReview.username,
+                                        rating = createdReview.rating.toFloat(),
+                                        comment = createdReview.content,
+                                        date = Date(createdReview.createdAt).toString()
+                                    )
+                                    BookBuddyDatabase.addReview(bookReview)
+                                    onReviewAdded(bookReview)
+
+                                    // Show success message
+                                    coroutineScope.launch {
+                                        snackbarHostState.showSnackbar(
+                                            message = "Review submitted successfully!",
+                                            duration = SnackbarDuration.Short
+                                        )
+                                    }
+
+                                    // Navigate back after a short delay to let user see the message
+                                    coroutineScope.launch {
+                                        kotlinx.coroutines.delay(800)
+                                        onNavigateBack()
+                                    }
+                                } else {
+                                    validationError = "Failed to create review. Please make sure you are logged in and try again."
+                                    coroutineScope.launch {
+                                        snackbarHostState.showSnackbar(
+                                            message = "Failed to submit review. Please try again.",
+                                            duration = SnackbarDuration.Short
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 },

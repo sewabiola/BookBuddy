@@ -182,7 +182,15 @@ object BookBuddyDatabase {
     fun addBookToCollection(collectionTitle: String, book: BookWithCategory): Boolean {
         return if (currentUser != null && collections.containsKey(collectionTitle)) {
             val collection = collections[collectionTitle]!!
-            val updatedBooks = collection.books + Book(book.title, book.author)
+            val updatedBooks = collection.books + Book(
+                id = book.id,
+                title = book.title,
+                author = book.author,
+                description = book.description,
+                category = book.categories.firstOrNull() ?: "",
+                coverImageUrl = book.coverImageUrl,
+                readingStatus = book.readingStatus
+            )
             collections[collectionTitle] = collection.copy(books = updatedBooks)
             publishCollections()
             true
@@ -191,10 +199,10 @@ object BookBuddyDatabase {
         }
     }
 
-    fun removeBookFromCollection(collectionTitle: String, bookTitle: String): Boolean {
+    fun removeBookFromCollection(collectionTitle: String, bookId: String): Boolean {
         return if (currentUser != null && collections.containsKey(collectionTitle)) {
             val collection = collections[collectionTitle]!!
-            val updatedBooks = collection.books.filter { it.title != bookTitle }
+            val updatedBooks = collection.books.filter { it.id != bookId }
             collections[collectionTitle] = collection.copy(books = updatedBooks)
             publishCollections()
             true
@@ -421,7 +429,16 @@ object BookBuddyDatabase {
 
     // region Helpers
     private fun publishBooks() {
-        booksState.value = books.values.toList()
+        // Sync reading status from map to book objects before publishing
+        val updatedBooks = books.values.map { book ->
+            val status = readingStatusMap[book.id]
+            if (status != null && book.readingStatus != status) {
+                book.copy(readingStatus = status)
+            } else {
+                book
+            }
+        }
+        booksState.value = updatedBooks
         updateRecommendations()
     }
 
@@ -520,10 +537,17 @@ object BookBuddyDatabase {
 
     fun setReadingStatus(bookId: String, status: String) {
         readingStatusMap[bookId] = status
+
+        // Also update the book object itself to keep it in sync
+        val book = books[bookId]
+        if (book != null) {
+            books[bookId] = book.copy(readingStatus = status)
+            publishBooks()
+        }
     }
 
     fun getReadingStatus(bookId: String): String {
-        return readingStatusMap[bookId] ?: "Not Started"
+        return readingStatusMap[bookId] ?: books[bookId]?.readingStatus ?: "Not Started"
     }
 
     fun getReadingStatistics(): ReadingStatistics {

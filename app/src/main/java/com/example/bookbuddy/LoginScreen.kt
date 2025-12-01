@@ -134,8 +134,8 @@ fun LoginScreen(
                         errorMessage = "Please fill in all fields"
                     } else {
                         isLoading = true
-                        // Simple login check - in real app, this would be API call
-                        val user = BookBuddyDatabase.loginUser(email)
+                        // Use password validation
+                        val user = BookBuddyDatabase.validateLogin(email, password)
                         if (user != null) {
                             onLoginSuccess()
                         } else {

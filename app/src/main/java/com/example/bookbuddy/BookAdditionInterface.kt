@@ -20,8 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.*
 
 // Task 51: 2-1-1-1 Create book addition interface
@@ -44,7 +47,30 @@ fun BookAdditionScreen(
     var coverImageUri by remember { mutableStateOf<String?>(null) }
     var showCategoryDialog by remember { mutableStateOf(false) }
     var isSearching by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    var searchResults by remember { mutableStateOf<List<BookWithCategory>>(emptyList()) }
+    var isSearchingAPI by remember { mutableStateOf(false) }
     var validationError by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+
+    // Debounced search
+    LaunchedEffect(searchQuery) {
+        if (searchQuery.length >= 3 && isSearching) {
+            isSearchingAPI = true
+            kotlinx.coroutines.delay(500) // Debounce 500ms
+            try {
+                val results = GoogleBooksService.fetchBooks(searchQuery, maxResults = 10)
+                searchResults = results
+            } catch (e: Exception) {
+                searchResults = emptyList()
+            } finally {
+                isSearchingAPI = false
+            }
+        } else if (searchQuery.length < 3) {
+            searchResults = emptyList()
+        }
+    }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -68,6 +94,7 @@ fun BookAdditionScreen(
                 }
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
@@ -83,7 +110,16 @@ fun BookAdditionScreen(
                                 coverImageUrl = coverImageUri ?: ""
                             )
                             onBookAdded(newBook)
-                            onNavigateBack()
+
+                            // Show success message
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = "Book added successfully!",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+
+                            // Don't call onNavigateBack() here - MainActivity will handle navigation
                         }
                     }
                 },
@@ -111,11 +147,28 @@ fun BookAdditionScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         OutlinedTextField(
-                            value = "",
-                            onValueChange = { /* TODO: Implement book search API */ },
+                            value = searchQuery,
+                            onValueChange = { 
+                                searchQuery = it
+                                if (it.length < 3) {
+                                    searchResults = emptyList()
+                                }
+                            },
                             label = { Text("Search by ISBN or Title") },
                             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                            placeholder = { Text("Enter ISBN or book title") },
+                            trailingIcon = {
+                                if (isSearchingAPI) {
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                                } else if (searchQuery.isNotEmpty()) {
+                                    IconButton(onClick = { 
+                                        searchQuery = ""
+                                        searchResults = emptyList()
+                                    }) {
+                                        Icon(Icons.Default.Close, contentDescription = "Clear")
+                                    }
+                                }
+                            },
+                            placeholder = { Text("Enter ISBN or book title (min 3 characters)") },
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -124,6 +177,100 @@ fun BookAdditionScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
+                        
+                        // Search Results
+                        if (searchResults.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Search Results:",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            LazyColumn(
+                                modifier = Modifier
+                                    .heightIn(max = 300.dp)
+                                    .fillMaxWidth()
+                            ) {
+                                items(searchResults, key = { it.id }) { result ->
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp)
+                                            .clickable {
+                                                // Auto-fill form with selected book
+                                                book = result.copy(
+                                                    id = UUID.randomUUID().toString() // Generate new ID
+                                                )
+                                                selectedCategories = result.categories
+                                                coverImageUri = result.coverImageUrl
+                                                searchQuery = ""
+                                                searchResults = emptyList()
+                                                isSearching = false
+                                            },
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = MaterialTheme.colorScheme.surface
+                                        )
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(12.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            // Book cover thumbnail
+                                            if (result.coverImageUrl.isNotEmpty()) {
+                                                AsyncImage(
+                                                    model = result.coverImageUrl,
+                                                    contentDescription = result.title,
+                                                    modifier = Modifier.size(50.dp),
+                                                    contentScale = ContentScale.Crop
+                                                )
+                                                Spacer(modifier = Modifier.width(12.dp))
+                                            }
+                                            
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = result.title,
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                                Text(
+                                                    text = result.author,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                                if (result.categories.isNotEmpty()) {
+                                                    Text(
+                                                        text = result.categories.take(2).joinToString(", "),
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = MaterialTheme.colorScheme.primary,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                }
+                                            }
+                                            
+                                            Icon(
+                                                Icons.Default.Add,
+                                                contentDescription = "Select",
+                                                tint = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        } else if (searchQuery.length >= 3 && !isSearchingAPI) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "No results found. Try a different search term.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))

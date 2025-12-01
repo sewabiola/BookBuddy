@@ -50,6 +50,9 @@ fun EnhancedCollectionDisplay(
     onAddBookClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     onBookDelete: (BookWithCategory) -> Unit = {},
+    onBrowseCategories: () -> Unit = {},
+    onViewReadingStatus: () -> Unit = {},
+    onViewRecommendations: () -> Unit = {},
     modifier: Modifier
 ) {
     var viewMode by remember { mutableStateOf(ViewMode.LIST) }
@@ -170,6 +173,44 @@ fun EnhancedCollectionDisplay(
                 collections = collections.size,
                 modifier = Modifier.padding(16.dp)
             )
+
+            // Quick Actions Section
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Text(
+                    text = "Quick Actions",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    QuickActionButton(
+                        text = "Categories",
+                        icon = Icons.Default.List,
+                        onClick = onBrowseCategories,
+                        modifier = Modifier.weight(1f)
+                    )
+                    QuickActionButton(
+                        text = "Reading Status",
+                        icon = Icons.Default.Edit,
+                        onClick = onViewReadingStatus,
+                        modifier = Modifier.weight(1f)
+                    )
+                    QuickActionButton(
+                        text = "Recommendations",
+                        icon = Icons.Default.Star,
+                        onClick = onViewRecommendations,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             if (recommendedBooks.isNotEmpty()) {
                 Text(
@@ -810,4 +851,41 @@ fun VerticalDivider(modifier: Modifier = Modifier) {
             .width(1.dp)
             .background(MaterialTheme.colorScheme.outlineVariant)
     )
+}
+
+@Composable
+fun QuickActionButton(
+    text: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.size(32.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                maxLines = 1
+            )
+        }
+    }
 }

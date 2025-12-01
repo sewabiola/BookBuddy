@@ -187,9 +187,20 @@ fun RegistrationScreen(
                     val errors = validateRegistrationData(registrationData)
                     if (errors.isEmpty()) {
                         isLoading = true
-                        // TODO: Implement actual registration logic
-                        // For now, just simulate success after validation
-                        onRegisterSuccess()
+                        // Create user profile and register with password
+                        val newUser = UserProfile(
+                            userId = java.util.UUID.randomUUID().toString(),
+                            username = registrationData.username,
+                            email = registrationData.email,
+                            displayName = registrationData.username
+                        )
+                        val success = BookBuddyDatabase.registerUser(newUser, registrationData.password)
+                        if (success) {
+                            onRegisterSuccess()
+                        } else {
+                            validationErrors = mapOf("email" to "Email already registered")
+                            isLoading = false
+                        }
                     } else {
                         validationErrors = errors
                     }
