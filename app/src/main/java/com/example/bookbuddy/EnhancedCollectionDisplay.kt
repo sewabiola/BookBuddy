@@ -53,6 +53,7 @@ fun EnhancedCollectionDisplay(
     onBrowseCategories: () -> Unit = {},
     onViewReadingStatus: () -> Unit = {},
     onViewRecommendations: () -> Unit = {},
+    onViewClubs: () -> Unit = {},
     modifier: Modifier
 ) {
     var viewMode by remember { mutableStateOf(ViewMode.LIST) }
@@ -202,9 +203,9 @@ fun EnhancedCollectionDisplay(
                         modifier = Modifier.weight(1f)
                     )
                     QuickActionButton(
-                        text = "Recommendations",
-                        icon = Icons.Default.Star,
-                        onClick = onViewRecommendations,
+                        text = "Clubs",
+                        icon = Icons.Default.Person,
+                        onClick = onViewClubs,
                         modifier = Modifier.weight(1f)
                     )
                 }

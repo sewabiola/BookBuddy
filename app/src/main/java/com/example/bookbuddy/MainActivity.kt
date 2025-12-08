@@ -124,6 +124,7 @@ class MainActivity : ComponentActivity() {
                                 onBrowseCategories = { navController.navigate("browse_categories") },
                                 onViewReadingStatus = { navController.navigate("reading_status") },
                                 onViewRecommendations = { navController.navigate("recommendations") },
+                                onViewClubs = { navController.navigate("clubs_discovery") },
                                 modifier = androidx.compose.ui.Modifier
                             )
                         }
@@ -261,6 +262,43 @@ class MainActivity : ComponentActivity() {
                         // Reading status screen
                         composable("reading_status") {
                             ReadingStatusScreen(navController = navController)
+                        }
+
+                        // Club Screens
+                        composable("clubs_discovery") {
+                            ClubDiscoveryScreen(navController = navController)
+                        }
+
+                        composable("my_clubs") {
+                            MyClubsScreen(navController = navController)
+                        }
+
+                        composable("create_club") {
+                            ClubCreationScreen(navController = navController)
+                        }
+
+                        composable("club_detail/{clubId}") { backStackEntry ->
+                            val clubId = backStackEntry.arguments?.getString("clubId") ?: ""
+                            ClubDetailScreen(
+                                clubId = clubId,
+                                navController = navController
+                            )
+                        }
+
+                        composable("club_members/{clubId}") { backStackEntry ->
+                            val clubId = backStackEntry.arguments?.getString("clubId") ?: ""
+                            ClubMembersScreen(
+                                clubId = clubId,
+                                navController = navController
+                            )
+                        }
+
+                        composable("club_settings/{clubId}") { backStackEntry ->
+                            val clubId = backStackEntry.arguments?.getString("clubId") ?: ""
+                            ClubSettingsScreen(
+                                clubId = clubId,
+                                navController = navController
+                            )
                         }
                     }
                 }

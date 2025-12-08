@@ -134,6 +134,102 @@ data class ModerationAction(
     val timestamp: Long = System.currentTimeMillis()
 )
 
+// Club data models
+data class Club(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String,
+    val description: String,
+    val ownerId: String,
+    val coverImageUrl: String? = null,
+    val genreTags: List<String> = emptyList(),
+    val isPublic: Boolean = true,
+    val rules: String? = null,
+    val createdAt: Long = System.currentTimeMillis(),
+    val memberCount: Int = 1,
+    val currentBookId: String? = null,
+    val inviteCode: String? = null // Optional invite code for private clubs
+)
+
+data class ClubMember(
+    val memberId: String = UUID.randomUUID().toString(),
+    val clubId: String,
+    val userId: String,
+    val role: MemberRole = MemberRole.MEMBER,
+    val joinedAt: Long = System.currentTimeMillis(),
+    val status: MemberStatus = MemberStatus.ACTIVE
+)
+
+data class JoinRequest(
+    val requestId: String = UUID.randomUUID().toString(),
+    val clubId: String,
+    val userId: String,
+    val username: String,
+    val requestedAt: Long = System.currentTimeMillis(),
+    val message: String? = null
+)
+
+// Invite code for clubs
+data class ClubInviteCode(
+    val code: String,
+    val clubId: String,
+    val createdBy: String, // userId of creator
+    val createdAt: Long = System.currentTimeMillis(),
+    val expiresAt: Long? = null, // null = never expires
+    val maxUses: Int? = null, // null = unlimited
+    val currentUses: Int = 0
+)
+
+// Club-specific discussion post
+data class ClubDiscussion(
+    val id: String = UUID.randomUUID().toString(),
+    val clubId: String,
+    val authorId: String,
+    val authorName: String,
+    val title: String,
+    val body: String,
+    val createdAt: Long = System.currentTimeMillis(),
+    val comments: MutableList<Comment> = mutableListOf(),
+    var isDeleted: Boolean = false
+)
+
+// Club activity entry
+data class ClubActivity(
+    val id: String = UUID.randomUUID().toString(),
+    val clubId: String,
+    val type: ActivityType,
+    val userId: String? = null,
+    val username: String? = null,
+    val bookId: String? = null,
+    val bookTitle: String? = null,
+    val discussionId: String? = null,
+    val discussionTitle: String? = null,
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+enum class ActivityType {
+    MEMBER_JOINED,
+    MEMBER_LEFT,
+    BOOK_ADDED,
+    BOOK_REMOVED,
+    CURRENT_BOOK_CHANGED,
+    DISCUSSION_CREATED,
+    DISCUSSION_COMMENTED
+}
+
+enum class MemberRole {
+    OWNER,
+    ADMIN,
+    MODERATOR,
+    MEMBER
+}
+
+enum class MemberStatus {
+    ACTIVE,
+    PENDING,
+    INVITED,
+    BANNED
+}
+
 // Review & feedback model for tasks 63/64
 data class Review(
     val id: String,
