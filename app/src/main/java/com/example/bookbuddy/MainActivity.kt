@@ -11,7 +11,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
+
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -105,7 +106,8 @@ class MainActivity : ComponentActivity() {
 
                         // Main App Screens - Using your EnhancedCollectionDisplay with state management
                         composable("collections") {
-                            EnhancedCollectionDisplay(
+                            CollectionsScreenWithSeeMore(
+                                navController = navController,
                                 collections = collections,
                                 booksWithCategory = books,
                                 recommendedBooks = recommended,
@@ -116,8 +118,6 @@ class MainActivity : ComponentActivity() {
                                 onCollectionClick = { collection ->
                                     navController.navigate("collection_details/${collection.title}")
                                 },
-                                onAddBookClick = { navController.navigate("add_book") },
-                                onProfileClick = { navController.navigate("profile") },
                                 onBookDelete = { book ->
                                     BookBuddyDatabase.deleteBook(book.id)
                                 },
@@ -125,9 +125,12 @@ class MainActivity : ComponentActivity() {
                                 onViewReadingStatus = { navController.navigate("reading_status") },
                                 onViewRecommendations = { navController.navigate("recommendations") },
                                 onViewClubs = { navController.navigate("clubs_discovery") },
-                                modifier = androidx.compose.ui.Modifier
+                                onSeeMoreCollections = {
+                                    navController.navigate("all_collections")
+                                }
                             )
                         }
+
 
                         composable("all_collections") {
                             AllCollectionsScreen(

@@ -22,9 +22,15 @@ fun CollectionsScreenWithSeeMore(
     navController: NavHostController,
     collections: List<BookCollection>,
     booksWithCategory: List<BookWithCategory>,
+    recommendedBooks: List<BookWithCategory>,
+    isLoadingBooks: Boolean,
     onBookClick: (BookWithCategory) -> Unit,
     onCollectionClick: (BookCollection) -> Unit,
     onBookDelete: (BookWithCategory) -> Unit,
+    onBrowseCategories: () -> Unit,
+    onViewReadingStatus: () -> Unit,
+    onViewRecommendations: () -> Unit,
+    onViewClubs: () -> Unit,
     onSeeMoreCollections: () -> Unit
 ) {
     Scaffold(
@@ -88,11 +94,17 @@ fun CollectionsScreenWithSeeMore(
                     .fillMaxWidth(),
                 collections = collections,
                 booksWithCategory = booksWithCategory,
+                recommendedBooks = recommendedBooks,
+                isLoadingBooks = isLoadingBooks,
                 onBookClick = onBookClick,
                 onCollectionClick = onCollectionClick,
                 onAddBookClick = { navController.navigate("add_book") },
                 onProfileClick = { navController.navigate("profile") },
-                onBookDelete = onBookDelete
+                onBookDelete = onBookDelete,
+                onBrowseCategories = onBrowseCategories,
+                onViewReadingStatus = onViewReadingStatus,
+                onViewRecommendations = onViewRecommendations,
+                onViewClubs = onViewClubs
             )
         }
     }
